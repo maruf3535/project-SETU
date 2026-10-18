@@ -8,6 +8,7 @@ import SignIn from './pages/onboarding/SignIn'
 import Verify from './pages/onboarding/Verify'
 import Welcome from './pages/onboarding/Welcome'
 import PortalPlaceholder from './pages/PortalPlaceholder'
+import { extraRoutes, pages } from './pages/registry'
 
 export default function App() {
   return (
@@ -20,13 +21,14 @@ export default function App() {
       <Route path="/onboarding/:role/verify" element={<Verify />} />
       {ROLES.map((role) => (
         <Route key={role} path={`/${role}`} element={<PortalLayout role={role} />}>
-          {portals[role].nav.map((item) =>
-            item.path ? (
-              <Route key={item.key} path={item.path} element={<PortalPlaceholder role={role} item={item} />} />
-            ) : (
-              <Route key={item.key} index element={<PortalPlaceholder role={role} item={item} />} />
-            ),
-          )}
+          {portals[role].nav.map((item) => {
+            const Page = pages[`${role}:${item.key}`]
+            const element = Page ? <Page /> : <PortalPlaceholder role={role} item={item} />
+            return item.path ? <Route key={item.key} path={item.path} element={element} /> : <Route key={item.key} index element={element} />
+          })}
+          {(extraRoutes[role] ?? []).map(({ path, element: Page }) => (
+            <Route key={path} path={path} element={<Page />} />
+          ))}
         </Route>
       ))}
       <Route path="*" element={<Navigate to="/" replace />} />

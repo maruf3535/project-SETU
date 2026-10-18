@@ -1,13 +1,17 @@
-import { ChevronDown, LogOut } from 'lucide-react'
+import { ChevronDown, LogOut, RotateCcw } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { portals, ROLES } from '../data/portals'
 import { useI18n } from '../i18n/I18nProvider'
+import { useDemo } from '../store/DemoStore'
+import { useToast } from './Toast'
 
 // Demo-only control: jump between the five portals without signing in again
 export default function RoleSwitcher({ current }) {
   const [open, setOpen] = useState(false)
   const { t } = useI18n()
+  const { dispatch } = useDemo()
+  const toast = useToast()
   const CurrentIcon = portals[current].icon
 
   return (
@@ -62,6 +66,19 @@ export default function RoleSwitcher({ current }) {
               )
             })}
             <div className="my-1 border-t border-line" />
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                dispatch({ type: 'reset' })
+                toast(t('common.resetDone'))
+                setOpen(false)
+              }}
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-ink-2 hover:bg-surface-2 hover:text-ink"
+            >
+              <RotateCcw className="size-4" />
+              {t('common.resetDemo')}
+            </button>
             <Link
               to="/"
               role="menuitem"

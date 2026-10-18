@@ -75,7 +75,7 @@ Every user chooses a role and uploads an ID. A four-tier verification pipeline c
 ### Industry, NGOs and Research Groups
 
 - Post real problems as **challenges**, with funded rewards held in **escrow**.
-- Verified university students and teams solve them. Payment is released when the solution is accepted.
+- Any verified student with the required skills, from school to university, can attempt them alone or in a team. Payment is released when the solution is accepted.
 - Each accepted delivery becomes **verified portfolio evidence** for the solver.
 - Larger, **milestone-paid projects** can be offered to teacher–student teams.
 - **Talent search** by verified skill.
