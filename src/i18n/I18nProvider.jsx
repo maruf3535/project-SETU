@@ -19,6 +19,12 @@ function lookup(dict, key) {
   return key.split('.').reduce((node, part) => node?.[part], dict)
 }
 
+// Fills {placeholders} in a string; arrays and objects pass through untouched
+function interpolate(value, vars) {
+  if (!vars || typeof value !== 'string') return value
+  return value.replace(/\{(\w+)\}/g, (match, name) => vars[name] ?? match)
+}
+
 export function I18nProvider({ children }) {
   const [lang, setLang] = useState(readStoredLang)
 
@@ -37,7 +43,7 @@ export function I18nProvider({ children }) {
     return {
       lang,
       setLang,
-      t: (key) => lookup(dictionaries[lang], key) ?? lookup(en, key) ?? key,
+      t: (key, vars) => interpolate(lookup(dictionaries[lang], key) ?? lookup(en, key) ?? key, vars),
       num: (n) => numberFormat.format(n),
     }
   }, [lang])
