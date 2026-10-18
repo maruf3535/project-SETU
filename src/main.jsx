@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
 import App from './App.jsx'
+import UnderDevelopmentBanner from './components/UnderDevelopmentBanner'
 import { I18nProvider } from './i18n/I18nProvider'
 import './index.css'
 import { ThemeProvider } from './theme/ThemeProvider'
@@ -12,7 +13,10 @@ createRoot(document.getElementById('root')).render(
     <HashRouter>
       <ThemeProvider>
         <I18nProvider>
-          <App />
+          <>
+            <UnderDevelopmentBanner />
+            <App />
+          </>
         </I18nProvider>
       </ThemeProvider>
     </HashRouter>
