@@ -1,5 +1,6 @@
 import { BookOpen, CircleCheck, Clock3, FileUp, Gift, Star, Undo2, Upload } from 'lucide-react'
 import { useState } from 'react'
+import { usePasscode } from '../../components/Passcode'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, inputStyles, PageIntro, Panel } from '../../components/ui'
 import { teacherCopies, teacherNotes } from '../../data/demo/teacher'
@@ -25,6 +26,7 @@ function ClassNotesPage() {
   const { level, persona } = useTeacher()
   const { notes, books, dispatch } = useDemo()
   const toast = useToast()
+  const confirmPasscode = usePasscode()
   const defaultSubject = L(persona.subjects[0].label) + (level === 'school' ? ` · ${L(persona.classes[0].label)}` : '')
   const [title, setTitle] = useState('')
   const [subject, setSubject] = useState(defaultSubject)
@@ -36,9 +38,10 @@ function ClassNotesPage() {
   const mine = [...fromStore, ...teacherNotes.filter((n) => n.authorId === persona.id && !fromStore.some((s) => s.id === n.id))]
   const copies = books.filter((b) => teacherCopies[level].includes(b.id))
 
-  function upload(event) {
+  async function upload(event) {
     event.preventDefault()
     if (!title.trim() || !subject.trim()) return
+    if (!(await confirmPasscode(t('passcode.actions.uploadNote', { title: title.trim() })))) return
     dispatch({
       type: 'uploadNote',
       note: {

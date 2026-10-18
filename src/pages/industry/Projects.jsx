@@ -1,5 +1,6 @@
 import { CircleCheck, FlaskConical } from 'lucide-react'
 import Avatar from '../../components/Avatar'
+import { usePasscode } from '../../components/Passcode'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, PageIntro, StatusPill } from '../../components/ui'
 import { useI18n } from '../../i18n/I18nProvider'
@@ -10,9 +11,12 @@ export default function Projects() {
   const { t, L, money, date, num } = useI18n()
   const { projects, studentById, dispatch } = useDemo()
   const toast = useToast()
+  const confirmPasscode = usePasscode()
   const mine = projects.filter((p) => p.orgId === MY_ORG.id)
 
-  function release(project, index) {
+  async function release(project, index) {
+    const milestone = project.milestones[index]
+    if (!(await confirmPasscode(t('passcode.actions.releaseMilestone', { amount: money(milestone.amount), title: L(milestone.title) })))) return
     dispatch({ type: 'releaseMilestone', projectId: project.id, index })
     toast(t('industry.projects.releasedToast', { amount: money(project.milestones[index].amount) }))
   }

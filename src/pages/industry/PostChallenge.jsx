@@ -1,6 +1,7 @@
 import { Check, Lock, Send, ShieldCheck, Users } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { usePasscode } from '../../components/Passcode'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, inputStyles, PageIntro } from '../../components/ui'
 import { SKILLS } from '../../data/demo/challenges'
@@ -26,6 +27,7 @@ export default function PostChallenge() {
   const { t, money } = useI18n()
   const { dispatch } = useDemo()
   const toast = useToast()
+  const confirmPasscode = usePasscode()
   const navigate = useNavigate()
   const [skills, setSkills] = useState(['Bangla translation', 'Technical writing'])
   const [reward, setReward] = useState(4000)
@@ -42,9 +44,11 @@ export default function PostChallenge() {
     )
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
+    const action = t('passcode.actions.postChallenge', { title: form.get('title').trim(), amount: money(Number(reward) || 0) })
+    if (!(await confirmPasscode(action))) return
     const id = `ch-${Date.now()}`
     dispatch({
       type: 'post',

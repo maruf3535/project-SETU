@@ -2,6 +2,7 @@ import { Award, BadgeCheck, Camera, Lock, PencilLine, ShieldCheck, Trash2 } from
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Avatar from '../../components/Avatar'
+import { usePasscode } from '../../components/Passcode'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, inputStyles } from '../../components/ui'
 import { signupFields } from '../../data/onboarding'
@@ -49,6 +50,7 @@ function ProfileForm({ role }) {
   const { t, L, date } = useI18n()
   const location = useLocation()
   const toast = useToast()
+  const confirmPasscode = usePasscode()
   const profile = useProfile(role)
   const [editing, setEditing] = useState(Boolean(location.state?.edit))
   const [photo, setPhoto] = useState(profile.photo ?? null)
@@ -67,11 +69,12 @@ function ProfileForm({ role }) {
     }
   }
 
-  function save(event) {
+  async function save(event) {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
     const fields = Object.fromEntries(detailFields.filter((f) => !LOCKED.includes(f.id)).map((f) => [f.id, form.get(f.id).trim()]))
     const name = fields.name ?? fields.org ?? profile.name
+    if (!(await confirmPasscode(t('passcode.actions.saveProfile')))) return
     profile.dispatch({
       type: 'updateProfile',
       id: profile.id,

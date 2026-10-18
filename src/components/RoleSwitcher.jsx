@@ -5,17 +5,19 @@ import { portals, ROLES } from '../data/portals'
 import { useI18n } from '../i18n/I18nProvider'
 import { useDemo } from '../store/DemoStore'
 import { useToast } from './Toast'
+import { useDismiss } from './useDismiss'
 
 // Demo-only control: jump between the five portals without signing in again
 export default function RoleSwitcher({ current }) {
   const [open, setOpen] = useState(false)
+  const dismissRef = useDismiss(open, () => setOpen(false))
   const { t } = useI18n()
   const { dispatch } = useDemo()
   const toast = useToast()
   const CurrentIcon = portals[current].icon
 
   return (
-    <div className="relative">
+    <div ref={dismissRef} className="relative">
       <button
         type="button"
         aria-haspopup="menu"
@@ -33,13 +35,6 @@ export default function RoleSwitcher({ current }) {
 
       {open && (
         <>
-          <button
-            type="button"
-            tabIndex={-1}
-            aria-hidden="true"
-            className="fixed inset-0 z-40 cursor-default"
-            onClick={() => setOpen(false)}
-          />
           <div
             role="menu"
             className="absolute right-0 z-50 mt-2 w-60 rounded-2xl border border-line bg-surface p-1.5 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.35)]"

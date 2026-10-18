@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
 import App from './App.jsx'
 import ScrollTopButton from './components/ScrollTopButton'
+import { PasscodeProvider } from './components/Passcode'
 import { ToastProvider } from './components/Toast'
 import UnderDevelopmentBanner from './components/UnderDevelopmentBanner'
 import { I18nProvider } from './i18n/I18nProvider'
@@ -18,9 +19,11 @@ createRoot(document.getElementById('root')).render(
         <I18nProvider>
           <DemoStoreProvider>
             <ToastProvider>
-              <UnderDevelopmentBanner />
-              <App />
-              <ScrollTopButton />
+              <PasscodeProvider>
+                <UnderDevelopmentBanner />
+                <App />
+                <ScrollTopButton />
+              </PasscodeProvider>
             </ToastProvider>
           </DemoStoreProvider>
         </I18nProvider>

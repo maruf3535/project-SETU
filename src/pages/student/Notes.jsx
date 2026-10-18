@@ -3,6 +3,7 @@ import { notePdf } from '../../components/pdf/pdfSources'
 import { useReader } from '../../components/pdf/useReader'
 import { useState } from 'react'
 import Avatar from '../../components/Avatar'
+import { usePasscode } from '../../components/Passcode'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, Dialog, inputStyles, PageIntro } from '../../components/ui'
 import { FREE_BOOK_POINTS } from '../../data/demo/notes'
@@ -83,11 +84,13 @@ function UploadDialog({ onClose }) {
   const { dispatch } = useDemo()
   const { student, level, config } = useCurrentStudent()
   const toast = useToast()
+  const confirmPasscode = usePasscode()
   const [file, setFile] = useState('')
 
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
+    if (!(await confirmPasscode(t('passcode.actions.uploadNote', { title: form.get('title').trim() })))) return
     dispatch({
       type: 'uploadNote',
       note: {

@@ -4,16 +4,18 @@ import { Link } from 'react-router-dom'
 import { useI18n } from '../i18n/I18nProvider'
 import { useProfile } from '../pages/profile/useProfile'
 import Avatar from './Avatar'
+import { useDismiss } from './useDismiss'
 
 // Top-right avatar: view or edit the signed-in user's profile, or sign out
 export default function ProfileMenu({ role }) {
   const { t } = useI18n()
   const profile = useProfile(role)
   const [open, setOpen] = useState(false)
+  const dismissRef = useDismiss(open, () => setOpen(false))
   const close = () => setOpen(false)
 
   return (
-    <div className="relative">
+    <div ref={dismissRef} className="relative">
       <button
         type="button"
         aria-haspopup="menu"
@@ -27,7 +29,6 @@ export default function ProfileMenu({ role }) {
 
       {open && (
         <>
-          <button type="button" tabIndex={-1} aria-hidden="true" className="fixed inset-0 z-40 cursor-default" onClick={close} />
           <div role="menu" className="absolute right-0 z-50 mt-2 w-64 rounded-2xl border border-line bg-surface p-1.5 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.35)]">
             <div className="flex items-center gap-3 px-3 py-2.5">
               <Avatar initials={profile.initials} photo={profile.photo} className="size-10 text-sm" />

@@ -45,7 +45,7 @@ function PageCanvas({ doc, number, width, className = '' }) {
   return <canvas ref={canvasRef} className={`block bg-white ${className}`} />
 }
 
-export default function PdfReader({ open, onClose, src, title, initialPage = 1, pageLabels, note }) {
+export default function PdfReader({ open, onClose, src, title, initialPage = 1, pageLabels, note, onPageChange }) {
   const { t, num } = useI18n()
   const [doc, setDoc] = useState(null)
   const [error, setError] = useState(false)
@@ -87,6 +87,14 @@ export default function PdfReader({ open, onClose, src, title, initialPage = 1, 
   }, [open, thumbs])
 
   const total = doc?.numPages ?? 0
+
+  // Lets a caller remember the reading position (e.g. My library's "continue reading")
+  const reportPage = useRef(onPageChange)
+  reportPage.current = onPageChange
+  useEffect(() => {
+    if (open && total) reportPage.current?.(page, total)
+  }, [open, page, total])
+
   const go = useCallback((n) => setPage((p) => Math.min(Math.max(1, typeof n === 'function' ? n(p) : n), total || 1)), [total])
 
   useEffect(() => {

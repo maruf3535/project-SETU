@@ -30,13 +30,23 @@ function seed() {
     profiles: {},
     portalState: {},
     seen: [],
+    // Purchase details for My library: { studentId, bookId, paid, pointsUsed, at }
+    purchaseLog: [],
+    // Free copies given to students by their teachers
+    freeCopies: [
+      { studentId: 'st-rahim', bookId: 'bk-physics', from: 'Md. Kamrul Hasan', at: '2026-10-08' },
+      { studentId: 'st-tasnim', bookId: 'bk-hsc-chem', from: 'Mymensingh Govt. College, Chemistry dept.', at: '2026-09-21' },
+    ],
+    // Last page read per `${studentId}:${bookId}`: { page, pages, at }
+    reading: {},
   })
 }
 
 function readStored() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : seed()
+    // Keys added to the seed after a browser saved its copy are filled in from the seed
+    return raw ? { ...seed(), ...JSON.parse(raw) } : seed()
   } catch {
     return seed()
   }
@@ -158,8 +168,14 @@ function reducer(state, action) {
           ? { ...state.points, [action.studentId]: state.points[action.studentId] - action.pointsUsed }
           : state.points,
         sales: [...(state.sales ?? []), { bookId: book.id, amount: action.paid, at: new Date().toISOString() }],
+        purchaseLog: [
+          ...(state.purchaseLog ?? []),
+          { studentId: action.studentId, bookId: book.id, paid: action.paid, pointsUsed: action.pointsUsed, at: new Date().toISOString() },
+        ],
       }
     }
+    case 'readPage':
+      return { ...state, reading: { ...(state.reading ?? {}), [action.key]: { page: action.page, pages: action.pages, at: new Date().toISOString() } } }
     case 'applyRole':
       return { ...state, roleApplications: [...new Set([...state.roleApplications, `${action.studentId}:${action.roleId}`])] }
     case 'addSkill':

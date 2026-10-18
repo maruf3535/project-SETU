@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { studentLevels } from '../data/demo/studentLevels'
 import { useI18n } from '../i18n/I18nProvider'
 import { useDemo } from '../store/DemoStore'
+import { useDismiss } from './useDismiss'
 
 // Builds the signed-in role's notifications from the shared demo data, newest decisions first
 function useNotifications(role) {
@@ -92,6 +93,7 @@ export default function NotificationBell({ role }) {
   const { t } = useI18n()
   const { seen = [], dispatch } = useDemo()
   const [open, setOpen] = useState(false)
+  const dismissRef = useDismiss(open, () => setOpen(false))
   const items = useNotifications(role)
   const unseen = items.filter((item) => !seen.includes(item.id))
 
@@ -101,7 +103,7 @@ export default function NotificationBell({ role }) {
   }
 
   return (
-    <div className="relative">
+    <div ref={dismissRef} className="relative">
       <button
         type="button"
         aria-label={t('shell.notifications')}
@@ -115,7 +117,6 @@ export default function NotificationBell({ role }) {
 
       {open && (
         <>
-          <button type="button" tabIndex={-1} aria-hidden="true" className="fixed inset-0 z-40 cursor-default" onClick={() => setOpen(false)} />
           <div className="fixed inset-x-3 top-[calc(4.5rem+env(safe-area-inset-top))] z-50 rounded-2xl border border-line bg-surface shadow-[0_16px_40px_-12px_rgb(0_0_0/0.4)] sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-2 sm:w-96">
             <p className="border-b border-line px-4 py-3 font-semibold">{t('notify.title')}</p>
             {items.length ? (

@@ -4,6 +4,8 @@
 export const students = [
   {
     id: 'st-nusrat',
+    // Filter facts: level school|college|university, year = class for school/college
+    level: 'university', field: 'CSE', year: 2, district: 'Dhaka', available: true,
     name: 'Nusrat Akter',
     initials: 'NA',
     university: 'University of Dhaka',
@@ -25,6 +27,8 @@ export const students = [
   },
   {
     id: 'st-anika',
+    // Filter facts: level school|college|university, year = class for school/college
+    level: 'university', field: 'English', year: 3, district: 'Chattogram', available: true,
     name: 'Anika Tabassum',
     initials: 'AT',
     university: 'University of Chittagong',
@@ -45,6 +49,8 @@ export const students = [
   },
   {
     id: 'st-rakib',
+    // Filter facts: level school|college|university, year = class for school/college
+    level: 'university', field: 'EEE', year: 4, district: 'Dhaka', available: false,
     name: 'Rakib Hasan',
     initials: 'RH',
     university: 'BUET',
@@ -66,6 +72,8 @@ export const students = [
   },
   {
     id: 'st-sadia',
+    // Filter facts: level school|college|university, year = class for school/college
+    level: 'university', field: 'CSE', year: 3, district: 'Rajshahi', available: true,
     name: 'Sadia Mahmud',
     initials: 'SM',
     university: 'RUET',
@@ -86,6 +94,8 @@ export const students = [
   },
   {
     id: 'st-mitu',
+    // Filter facts: level school|college|university, year = class for school/college
+    level: 'university', field: 'Agrotechnology', year: 4, district: 'Satkhira', available: true,
     name: 'Mitu Akter',
     initials: 'MA',
     university: 'Khulna University',
@@ -105,6 +115,8 @@ export const students = [
   },
   {
     id: 'st-priya',
+    // Filter facts: level school|college|university, year = class for school/college
+    level: 'university', field: 'Statistics', year: 3, district: 'Rangpur', available: true,
     name: 'Priya Das',
     initials: 'PD',
     university: 'Begum Rokeya University',
@@ -125,6 +137,8 @@ export const students = [
   },
   {
     id: 'st-tanjim',
+    // Filter facts: level school|college|university, year = class for school/college
+    level: 'university', field: 'CSE', year: 2, district: 'Sylhet', available: true,
     name: 'Tanjim Rahman',
     initials: 'TR',
     university: 'SUST',
@@ -144,6 +158,8 @@ export const students = [
   },
   {
     id: 'st-rahim',
+    // Filter facts: level school|college|university, year = class for school/college
+    level: 'school', field: 'Science', year: 10, district: 'Kurigram', available: true,
     name: 'Rahim Uddin',
     initials: 'RU',
     university: 'Kurigram Govt. High School',
@@ -164,6 +180,8 @@ export const students = [
   },
   {
     id: 'st-tasnim',
+    // Filter facts: level school|college|university, year = class for school/college
+    level: 'college', field: 'Science', year: 12, district: 'Mymensingh', available: true,
     name: 'Tasnim Ferdous',
     initials: 'TF',
     university: 'Mymensingh Govt. College',
@@ -183,6 +201,8 @@ export const students = [
   },
   {
     id: 'st-fahim',
+    // Filter facts: level school|college|university, year = class for school/college
+    level: 'university', field: 'Mechanical', year: 3, district: 'Chattogram', available: false,
     name: 'Fahim Chowdhury',
     initials: 'FC',
     university: 'CUET',

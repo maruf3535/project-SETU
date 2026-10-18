@@ -1,6 +1,7 @@
 import { Megaphone, Users } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { usePasscode } from '../../components/Passcode'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, inputStyles, PageIntro, Panel } from '../../components/ui'
 import { audienceByClass, channels, classOptions, COST_PER_STUDENT, divisionShare } from '../../data/demo/publisher'
@@ -38,6 +39,7 @@ export default function Promote() {
   const { t, L, num, money, date } = useI18n()
   const { dispatch } = useDemo()
   const toast = useToast()
+  const confirmPasscode = usePasscode()
   const books = useMyBooks()
   const promotions = usePromotions()
   const live = books.filter((b) => b.status === 'live')
@@ -56,9 +58,10 @@ export default function Promote() {
     setCls(defaultClass(byId[id]))
   }
 
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault()
-    const promotion = { id: `promo-${Date.now()}`, bookId, target: { cls, division }, days, budget, reach, startedAt: new Date().toISOString() }
+    if (!(await confirmPasscode(t('passcode.actions.promote', { amount: money(budget), title: L(byId[bookId].title) })))) return
+    const promotion ={ id: `promo-${Date.now()}`, bookId, target: { cls, division }, days, budget, reach, startedAt: new Date().toISOString() }
     dispatch({ type: 'promoteBook', promotion })
     toast(t('publisher.promote.started', { title: L(byId[bookId].title), n: num(reach) }))
   }

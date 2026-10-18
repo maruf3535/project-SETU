@@ -1,6 +1,7 @@
 import { ArrowLeft, BadgeCheck, Briefcase, CalendarDays, Check, Circle, Clock3, FileUp, FlaskConical, Landmark, Mail, ShieldCheck, Target, Undo2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import { usePasscode } from '../../components/Passcode'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, Dialog, inputStyles, PageIntro, SkillChip, StatusPill } from '../../components/ui'
 import { useI18n } from '../../i18n/I18nProvider'
@@ -20,14 +21,16 @@ function PayLabel({ item }) {
 }
 
 function SubmitDialog({ challenge, onClose }) {
-  const { t } = useI18n()
+  const { t, L } = useI18n()
   const { dispatch } = useDemo()
   const toast = useToast()
+  const confirmPasscode = usePasscode()
   const [files, setFiles] = useState([])
 
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault()
     const note = new FormData(event.currentTarget).get('note').trim()
+    if (!(await confirmPasscode(t('passcode.actions.submitWork', { title: L(challenge.title) })))) return
     dispatch({
       type: 'submit',
       id: challenge.id,

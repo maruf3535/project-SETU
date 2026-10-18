@@ -2,6 +2,7 @@ import { ArrowLeft, BookOpenText, Check, CircleAlert, CircleCheck, Clock3, FileU
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { bookPdf } from '../../components/pdf/pdfSources'
 import { useReader } from '../../components/pdf/useReader'
+import { usePasscode } from '../../components/Passcode'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, Panel } from '../../components/ui'
 import { SAMPLE_PAGES } from '../../data/demo/books'
@@ -40,6 +41,7 @@ export default function ListingDetail() {
   const { t, L, money, num, date } = useI18n()
   const { books, portalState, dispatch } = useDemo()
   const toast = useToast()
+  const confirmPasscode = usePasscode()
   const [openReader, reader] = useReader()
   const book = books.find((b) => b.id === id && b.publisherId === 'brightpage')
   const trail = useReviewTrail(book ?? { id })
@@ -59,7 +61,8 @@ export default function ListingDetail() {
     })
   }
 
-  function uploadCorrected() {
+  async function uploadCorrected() {
+    if (!(await confirmPasscode(t('passcode.actions.uploadCorrected', { title: L(book.title) })))) return
     const events = portalState?.['publisher.events'] ?? []
     dispatch({ type: 'reviewBook', bookId: book.id, status: 'review' })
     dispatch({ type: 'setPortalState', key: 'publisher.events', value: [...events, { bookId: book.id, kind: 'resubmitted', at: new Date().toISOString(), answers: book.reviewNote }] })

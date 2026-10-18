@@ -1,5 +1,7 @@
 import {
   ArrowRight,
+  Banknote,
+  BookX,
   Bot,
   Briefcase,
   Clock,
@@ -12,7 +14,9 @@ import {
   Pencil,
   Scale,
   ShieldCheck,
+  Store,
   TriangleAlert,
+  UserX,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import Avatar from '../../components/Avatar'
@@ -27,8 +31,8 @@ import HeroBridge from './HeroBridge'
 import HeroMockup from './HeroMockup'
 
 const REPO_URL = 'https://github.com/maruf3535/project-SETU'
-const problemIcons = [TriangleAlert, Pencil, Map, Medal]
-const solutionIcons = [ShieldCheck, Bot, Globe, IdCard]
+const problemIcons = [TriangleAlert, Pencil, Map, Medal, UserX, BookX]
+const solutionIcons = [ShieldCheck, Bot, Globe, IdCard, Banknote, Store]
 const impactIcons = [Scale, Clock, Briefcase, Coins]
 const tierRoles = ['student', 'teacher', 'publisher', 'industry']
 

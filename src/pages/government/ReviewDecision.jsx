@@ -3,6 +3,7 @@ import { useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { bookPdf, notePdf, reviewPage } from '../../components/pdf/pdfSources'
 import { useReader } from '../../components/pdf/useReader'
+import { usePasscode } from '../../components/Passcode'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, inputStyles, Panel, SkillChip } from '../../components/ui'
 import { bookChecks, challengeFlags } from '../../data/demo/government'
@@ -301,6 +302,7 @@ function Decision({ item, queue }) {
   const { t, L, num } = useI18n()
   const { dispatch, portalState } = useDemo()
   const toast = useToast()
+  const confirmPasscode = usePasscode()
   const navigate = useNavigate()
   const countReview = useCountReview()
   const waitLabel = useWaitLabel()
@@ -327,7 +329,8 @@ function Decision({ item, queue }) {
     navigate(next ? link(next) : '/government', { replace: true })
   }
 
-  function approve() {
+  async function approve() {
+    if (!(await confirmPasscode(t('passcode.actions.approve', { title })))) return
     if (item.kind === 'challenge') dispatch({ type: 'approve', id: item.id })
     if (item.kind === 'book') dispatch({ type: 'reviewBook', bookId: item.id, status: 'live' })
     if (item.kind === 'note') dispatch({ type: 'reviewNote', noteId: item.id, status: 'reviewed' })
@@ -335,13 +338,14 @@ function Decision({ item, queue }) {
     finish(t(`government.review.approved.${item.kind}`, { title }))
   }
 
-  function sendBack() {
+  async function sendBack() {
     const text = note.trim()
     if (!text) {
       setNoteError(true)
       noteRef.current?.focus()
       return
     }
+    if (!(await confirmPasscode(t('passcode.actions.sendBack', { title })))) return
     if (item.kind === 'challenge') dispatch({ type: 'returnChallenge', id: item.id, note: text })
     if (item.kind === 'book') dispatch({ type: 'reviewBook', bookId: item.id, status: 'fix', note: text })
     if (item.kind === 'note') dispatch({ type: 'reviewNote', noteId: item.id, status: 'rejected', note: text })

@@ -1,6 +1,7 @@
 import { Check, Info, Loader2, Minus, Plus, RotateCcw, Send, WandSparkles } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { usePasscode } from '../../components/Passcode'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, inputStyles, PageIntro, Panel } from '../../components/ui'
 import { questionBank } from '../../data/demo/questions'
@@ -88,6 +89,7 @@ function GeneratorForm() {
   const { t, L, num } = useI18n()
   const { level, persona, saved, save } = useTeacher()
   const toast = useToast()
+  const confirmPasscode = usePasscode()
   const [subject, setSubject] = useState(persona.subjects[0].id)
   const [cls, setCls] = useState(persona.classes[0].id)
   const [topics, setTopics] = useState(persona.topics.map((x) => x.id))
@@ -125,7 +127,9 @@ function GeneratorForm() {
     setPhase('form')
   }
 
-  function generate() {
+  async function generate() {
+    const action = t('passcode.actions.generatePaper', { subject: L(subjectLabel), mcq: num(mcqN), creative: num(creativeN) })
+    if (!(await confirmPasscode(action))) return
     setRound((r) => r + 1)
     setSetIndex(0)
     setPublished(null)
@@ -139,12 +143,13 @@ function GeneratorForm() {
   const fullMarks = mcqN + creativeN * CREATIVE_MARKS
   const optionLabels = t('teacher.generator.optionLabels')
 
-  function publish() {
+  async function publish() {
     const opens = new Date('2026-10-19T10:00:00').toISOString()
     const title = {
       en: `${subjectLabel.en} · ${chosenTopics.map((x) => x.label.en).join(', ')}`,
       bn: `${subjectLabel.bn} · ${chosenTopics.map((x) => x.label.bn).join(', ')}`,
     }
+    if (!(await confirmPasscode(t('passcode.actions.publishPaper', { title: L(title), section: L(section.label) })))) return
     const exam = { id: newId('ex-gen'), level, title, section: target, state: 'scheduled', opens }
     save('published', [exam, ...saved('published', [])])
     setPublished(target)

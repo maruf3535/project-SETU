@@ -1,6 +1,7 @@
 import { Eye, EyeOff, LoaderCircle } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { usePasscode } from '../../components/Passcode'
 import { demoAccounts } from '../../data/onboarding'
 import { portals, ROLES } from '../../data/portals'
 import { useI18n } from '../../i18n/I18nProvider'
@@ -12,6 +13,7 @@ const inputClass =
 export default function SignIn() {
   const { t } = useI18n()
   const navigate = useNavigate()
+  const confirmPasscode = usePasscode()
   const [role, setRole] = useState('student')
   const [email, setEmail] = useState(demoAccounts.student)
   const [password, setPassword] = useState('demo1234')
@@ -23,8 +25,9 @@ export default function SignIn() {
     setEmail(demoAccounts[next])
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
+    if (!(await confirmPasscode(t('passcode.actions.signIn', { email: email.trim() })))) return
     setBusy(true)
     // Any details work in the demo; the short pause just makes the sign-in feel real
     setTimeout(() => navigate(`/${role}`), 700)

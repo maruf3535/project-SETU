@@ -1,8 +1,9 @@
-import { ArrowLeft, BadgeCheck, BookOpen, BookOpenText, Check, Search, Star, Tag } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, BookOpen, BookOpenText, Check, Search, ShoppingBag, Star, Tag } from 'lucide-react'
 import { useState } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { bookPdf } from '../../components/pdf/pdfSources'
 import { useReader } from '../../components/pdf/useReader'
+import { usePasscode } from '../../components/Passcode'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, Dialog, inputStyles, PageIntro } from '../../components/ui'
 import { POINTS_DISCOUNT } from '../../data/demo/books'
@@ -25,13 +26,170 @@ export function BookCover({ book, className = '' }) {
   )
 }
 
+// Bought books and free copies from teachers both count as the student's own
 function useOwned() {
-  const { purchases } = useDemo()
+  const { purchases, freeCopies = [] } = useDemo()
   const { student } = useCurrentStudent()
-  return (bookId) => purchases.includes(`${student.id}:${bookId}`)
+  return (bookId) => purchases.includes(`${student.id}:${bookId}`) || freeCopies.some((f) => f.studentId === student.id && f.bookId === bookId)
+}
+
+// Opens a book in the PDF reader. An owned copy resumes at, and remembers, the last page read.
+function useBookReader() {
+  const { t, L, num } = useI18n()
+  const { reading = {}, dispatch } = useDemo()
+  const { student } = useCurrentStudent()
+  const [openReader, reader] = useReader()
+
+  function read(book, { page, full = false } = {}) {
+    const pdf = bookPdf(book.id)
+    const key = `${student.id}:${book.id}`
+    const start = page ?? (full ? (reading[key]?.page ?? 1) : 1)
+    openReader({
+      src: pdf.file,
+      title: L(book.title),
+      initialPage: Math.min(start, pdf.pages),
+      pageLabels: pdf.pageLabels,
+      note: full ? t('pdf.fullNote', { n: num(pdf.pages) }) : t('pdf.sampleNote', { n: num(pdf.pages) }),
+      onPageChange: full ? (p, total) => dispatch({ type: 'readPage', key, page: p, pages: total }) : undefined,
+    })
+  }
+  return [read, reader]
+}
+
+// "2 days ago" in the current language
+function useRelativeTime() {
+  const { lang } = useI18n()
+  const format = new Intl.RelativeTimeFormat(lang === 'bn' ? 'bn-BD' : 'en', { numeric: 'auto' })
+  return (iso) => {
+    const minutes = Math.round((new Date(iso).getTime() - Date.now()) / 60000)
+    if (Math.abs(minutes) < 60) return format.format(minutes, 'minute')
+    const hours = Math.round(minutes / 60)
+    if (Math.abs(hours) < 24) return format.format(hours, 'hour')
+    return format.format(Math.round(hours / 24), 'day')
+  }
+}
+
+function Library() {
+  const { t, L, num, money, date } = useI18n()
+  const { books, purchases, purchaseLog = [], freeCopies = [], reading = {} } = useDemo()
+  const { student } = useCurrentStudent()
+  const [read, reader] = useBookReader()
+  const ago = useRelativeTime()
+  const byId = Object.fromEntries(books.map((b) => [b.id, b]))
+
+  // Purchases (latest detail per book; older purchases may have no detail), then free copies
+  const bought = purchases
+    .filter((p) => p.startsWith(`${student.id}:`))
+    .map((p) => p.split(':')[1])
+    .map((bookId) => ({ bookId, source: 'bought', log: [...purchaseLog].reverse().find((l) => l.studentId === student.id && l.bookId === bookId) }))
+  const free = freeCopies
+    .filter((f) => f.studentId === student.id && !bought.some((b) => b.bookId === f.bookId))
+    .map((f) => ({ bookId: f.bookId, source: 'free', from: f.from, at: f.at }))
+  const items = [...bought, ...free].filter((item) => byId[item.bookId])
+
+  if (!items.length) {
+    return (
+      <div className="rounded-2xl border border-dashed border-line bg-surface px-6 py-12 text-center">
+        <BookOpen className="mx-auto size-8 text-primary" />
+        <p className="mt-3 text-ink-2">{t('student.library.empty')}</p>
+        <Link to="/student/store" className={`${buttonStyles.primary} mt-5`}>
+          {t('student.library.browse')}
+        </Link>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <ul className="grid gap-4 md:grid-cols-2">
+        {items.map((item) => {
+          const book = byId[item.bookId]
+          const progress = reading[`${student.id}:${book.id}`]
+          const origin =
+            item.source === 'free'
+              ? t('student.library.free', { from: item.from })
+              : item.log
+                ? item.log.pointsUsed
+                  ? t('student.library.boughtPoints', { date: date(item.log.at), amount: money(item.log.paid), points: num(item.log.pointsUsed) })
+                  : t('student.library.bought', { date: date(item.log.at), amount: money(item.log.paid) })
+                : t('student.library.boughtEarlier')
+          return (
+            <li key={book.id} className="flex gap-4 rounded-2xl border border-line bg-surface p-4">
+              <Link to={`/student/store/${book.id}`} className="w-24 shrink-0">
+                <BookCover book={book} className="!p-2 [&>span:last-child]:text-sm" />
+              </Link>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className={`self-start rounded-full px-2.5 py-0.5 text-xs font-semibold ${item.source === 'free' ? 'bg-accent-soft text-warn' : 'bg-ok-soft text-ok'}`}>
+                  {item.source === 'free' ? t('student.library.freeTag') : t('student.library.boughtTag')}
+                </span>
+                <p className="mt-2 font-semibold">{L(book.title)}</p>
+                <p className="text-xs text-ink-2">
+                  {L(book.cls)} · {book.publisher}
+                </p>
+                <p className="mt-1 text-xs text-ink-2">{origin}</p>
+
+                <div className="mt-3">
+                  <div className="h-1.5 rounded-full bg-surface-2">
+                    <div className="h-full rounded-full bg-primary" style={{ width: progress ? `${(progress.page / progress.pages) * 100}%` : '0%' }} />
+                  </div>
+                  <p className="mt-1 text-xs text-ink-2 tabular-nums">
+                    {progress
+                      ? `${t('student.library.progress', { page: num(progress.page), total: num(progress.pages) })} · ${t('student.library.lastRead', { when: ago(progress.at) })}`
+                      : t('student.library.notStarted')}
+                  </p>
+                </div>
+
+                <button type="button" onClick={() => read(book, { full: true })} className={`${buttonStyles.accent} mt-3 self-start py-2`}>
+                  <BookOpenText className="size-4" /> {progress ? t('student.library.continue') : t('student.library.read')}
+                </button>
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+      {reader}
+    </>
+  )
 }
 
 export default function Store() {
+  const [params, setParams] = useSearchParams()
+  const tab = params.get('tab') === 'library' ? 'library' : 'store'
+  const { t, num } = useI18n()
+  const { purchases, freeCopies = [] } = useDemo()
+  const { student } = useCurrentStudent()
+  const libraryCount = new Set([
+    ...purchases.filter((p) => p.startsWith(`${student.id}:`)).map((p) => p.split(':')[1]),
+    ...freeCopies.filter((f) => f.studentId === student.id).map((f) => f.bookId),
+  ]).size
+
+  return (
+    <div className="mx-auto max-w-6xl">
+      <PageIntro title={t('nav.store')} body={t('student.store.body')} />
+      <div role="tablist" aria-label={t('nav.store')} className="mb-5 inline-flex rounded-xl border border-line bg-surface p-1">
+        {['store', 'library'].map((key) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => setParams(key === 'library' ? { tab: 'library' } : {}, { replace: true })}
+            className={`inline-flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === key ? 'bg-brand text-brand-ink' : 'text-ink-2 hover:text-ink'}`}
+          >
+            {key === 'library' ? <BookOpen className="size-4" /> : <ShoppingBag className="size-4" />}
+            {t(`student.library.tabs.${key}`)}
+            {key === 'library' && libraryCount > 0 && (
+              <span className={`rounded-full px-1.5 text-xs tabular-nums ${tab === key ? 'bg-brand-ink/15' : 'bg-surface-2'}`}>{num(libraryCount)}</span>
+            )}
+          </button>
+        ))}
+      </div>
+      {tab === 'library' ? <Library /> : <StoreShelf />}
+    </div>
+  )
+}
+
+function StoreShelf() {
   const { t, L, money, num } = useI18n()
   const { books } = useDemo()
   const { level } = useCurrentStudent()
@@ -48,9 +206,7 @@ export default function Store() {
   )
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <PageIntro title={t('nav.store')} body={t('student.store.body')} />
-
+    <div>
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <label htmlFor="store-search" className="relative min-w-0 flex-1 sm:max-w-sm">
           <span className="sr-only">{t('student.store.search')}</span>
@@ -110,7 +266,8 @@ export function BookDetail() {
   const owned = useOwned()
   const toast = useToast()
   const [buying, setBuying] = useState(false)
-  const [openReader, reader] = useReader()
+  const [readBook, reader] = useBookReader()
+  const confirmPasscode = usePasscode()
 
   const book = books.find((b) => b.id === id && b.status === 'live')
   if (!book) return <Navigate to="/student/store" replace />
@@ -119,18 +276,15 @@ export function BookDetail() {
   const canUsePoints = points >= POINTS_DISCOUNT.points
   const pdf = bookPdf(book.id)
 
-  // Before purchase only the free sample is offered; after purchase the demo still ships the same sample pages
+  // Before purchase only the free sample is offered; after purchase the demo still ships the same sample pages.
+  // The main Read button resumes where the student left off; a page tile opens that exact page.
   function read(page, full) {
-    openReader({
-      src: pdf.file,
-      title: L(book.title),
-      initialPage: Math.min(page, pdf.pages),
-      pageLabels: pdf.pageLabels,
-      note: full ? t('pdf.fullNote', { n: num(pdf.pages) }) : t('pdf.sampleNote', { n: num(pdf.pages) }),
-    })
+    readBook(book, { page: page ?? undefined, full })
   }
 
-  function buy(usePoints) {
+  async function buy(usePoints) {
+    const amount = money(usePoints ? discounted : book.price)
+    if (!(await confirmPasscode(t('passcode.actions.buyBook', { amount, title: L(book.title) })))) return
     dispatch({
       type: 'buyBook',
       bookId: book.id,
@@ -195,9 +349,9 @@ export function BookDetail() {
             </div>
             {owned(book.id) ? (
               <>
-                <span className="inline-flex items-center gap-2 rounded-xl bg-ok-soft px-4 py-2.5 text-sm font-semibold text-ok">
+                <Link to="/student/store?tab=library" className="inline-flex items-center gap-2 rounded-xl bg-ok-soft px-4 py-2.5 text-sm font-semibold text-ok hover:underline">
                   <BookOpen className="size-4" /> {t('student.store.owned')}
-                </span>
+                </Link>
                 <button type="button" onClick={() => read(1, true)} className={buttonStyles.accent}>
                   <BookOpenText className="size-4" /> {t('student.store.read')}
                 </button>

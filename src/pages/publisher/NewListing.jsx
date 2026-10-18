@@ -1,6 +1,7 @@
 import { BadgeCheck, FileText, Minus, Plus, Send, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { usePasscode } from '../../components/Passcode'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, inputStyles, PageIntro, Panel } from '../../components/ui'
 import { classOptions, MY_PUBLISHER, subjects } from '../../data/demo/publisher'
@@ -29,6 +30,7 @@ export default function NewListing() {
   const { t, L, num, money } = useI18n()
   const { dispatch } = useDemo()
   const toast = useToast()
+  const confirmPasscode = usePasscode()
   const navigate = useNavigate()
 
   // Prefilled so the demo can be submitted in one click
@@ -53,11 +55,12 @@ export default function NewListing() {
   const option = classOptions.find((c) => c.id === form.cls)
   const preview = { title: { en: form.titleEn || '…', bn: form.titleBn || form.titleEn || '…' }, cover: form.cover }
 
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault()
     if (!valid) return
-    const id = `bk-${Date.now()}`
     const titleEn = form.titleEn.trim()
+    if (!(await confirmPasscode(t('passcode.actions.uploadBook', { title: titleEn })))) return
+    const id = `bk-${Date.now()}`
     const aboutEn = form.about.trim()
     const aboutBn = form.aboutBn.trim()
     dispatch({

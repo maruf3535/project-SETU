@@ -2,6 +2,7 @@ import { ArrowLeft, BadgeCheck, Check, Clock3, FileText, Landmark, Lock, ShieldC
 import { useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import Avatar from '../../components/Avatar'
+import { usePasscode } from '../../components/Passcode'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, Dialog, inputStyles, Panel, SkillChip, StatusPill } from '../../components/ui'
 import { useI18n } from '../../i18n/I18nProvider'
@@ -59,6 +60,7 @@ export default function ChallengeDetail() {
   const { t, L, money, date } = useI18n()
   const { challenges, studentById, dispatch } = useDemo()
   const toast = useToast()
+  const confirmPasscode = usePasscode()
   const [rateOpen, setRateOpen] = useState(false)
   const [rating, setRating] = useState(5)
   const [revising, setRevising] = useState(false)
@@ -84,7 +86,8 @@ export default function ChallengeDetail() {
     toast(t('industry.detail.assigned', { name: student.name }))
   }
 
-  function pay() {
+  async function pay() {
+    if (!(await confirmPasscode(t('passcode.actions.releasePayment', { amount: money(challenge.reward), name: solver.name })))) return
     dispatch({ type: 'accept', id: challenge.id, rating })
     setRateOpen(false)
     toast(t('industry.detail.paidToast', { amount: money(challenge.reward), name: solver.name }))

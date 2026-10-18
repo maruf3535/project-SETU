@@ -1,6 +1,7 @@
 import { BadgeCheck, CircleCheck, Clock3, Lock, TriangleAlert, X } from 'lucide-react'
 import { useState } from 'react'
 import Avatar from '../../components/Avatar'
+import { usePasscode } from '../../components/Passcode'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, Dialog, inputStyles, PageIntro } from '../../components/ui'
 import { idRequests } from '../../data/demo/government'
@@ -183,6 +184,7 @@ export default function Ids() {
   const { t, L, num } = useI18n()
   const { portalState, dispatch } = useDemo()
   const toast = useToast()
+  const confirmPasscode = usePasscode()
   const countReview = useCountReview()
   const [filter, setFilter] = useState('pending')
   const [rejecting, setRejecting] = useState(null)
@@ -199,13 +201,15 @@ export default function Ids() {
     countReview()
   }
 
-  function approve(request) {
+  async function approve(request) {
+    if (!(await confirmPasscode(t('passcode.actions.approveId', { name: request.name })))) return
     decide(request, { status: 'approved' })
     toast(t('government.ids.approvedToast', { name: request.name }))
   }
 
-  function confirmReject(event) {
+  async function confirmReject(event) {
     event.preventDefault()
+    if (!(await confirmPasscode(t('passcode.actions.rejectId', { name: rejecting.name })))) return
     decide(rejecting, { status: 'rejected', reason: reason.trim() })
     toast(t('government.ids.rejectedToast', { name: rejecting.name }))
     setRejecting(null)
