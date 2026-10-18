@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import { usePasscode } from '../../components/Passcode'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, inputStyles, PageIntro, Panel } from '../../components/ui'
-import { classOptions, MY_PUBLISHER, subjects } from '../../data/demo/publisher'
+import { classById, firstSubject, subjectGroups, subjectLabel } from '../../data/curriculum'
+import { classOptions, MY_PUBLISHER } from '../../data/demo/publisher'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useDemo } from '../../store/DemoStore'
 import { BookCover } from './shared'
@@ -49,6 +50,11 @@ export default function NewListing() {
     fileName: 'biology-board-qbank-2026.pdf',
   })
   const set = (key) => (event) => setForm((f) => ({ ...f, [key]: event.target.value }))
+  // A new class keeps the subject when that class teaches it, otherwise picks the class's first subject
+  const chooseClass = (event) => {
+    const cls = event.target.value
+    setForm((f) => ({ ...f, cls, subject: subjectLabel(cls, f.subject) ? f.subject : firstSubject(cls) }))
+  }
   const setSamples = (n) => setForm((f) => ({ ...f, samples: Math.min(MAX_SAMPLES, Math.max(MIN_SAMPLES, n)) }))
 
   const valid = form.titleEn.trim() && Number(form.price) > 0 && Number(form.pages) > form.samples && form.fileName
@@ -112,7 +118,7 @@ export default function NewListing() {
                 </Field>
               </div>
               <Field id="pub-class" label={t('publisher.new.cls')}>
-                <select id="pub-class" value={form.cls} onChange={set('cls')} className={inputStyles}>
+                <select id="pub-class" value={form.cls} onChange={chooseClass} className={inputStyles}>
                   {classOptions.map((c) => (
                     <option key={c.id} value={c.id}>
                       {L(c.label)}
@@ -122,10 +128,14 @@ export default function NewListing() {
               </Field>
               <Field id="pub-subject" label={t('publisher.new.subject')}>
                 <select id="pub-subject" value={form.subject} onChange={set('subject')} className={inputStyles}>
-                  {Object.entries(subjects).map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {L(label)}
-                    </option>
+                  {Object.entries(classById(form.cls)?.subjects ?? {}).map(([group, list]) => (
+                    <optgroup key={group} label={L(subjectGroups[group])}>
+                      {Object.entries(list).map(([key, label]) => (
+                        <option key={`${group}-${key}`} value={key}>
+                          {L(label)}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </Field>
@@ -244,7 +254,7 @@ export default function NewListing() {
               <BookCover book={preview} className="w-24 text-base" />
               <div className="min-w-0 text-sm">
                 <p className="font-semibold break-words">{L(preview.title)}</p>
-                <p className="mt-1 text-ink-2">{L(option.label)} · {L(subjects[form.subject])}</p>
+                <p className="mt-1 text-ink-2">{L(option.label)} · {L(subjectLabel(form.cls, form.subject))}</p>
                 <p className="mt-2 font-display text-xl font-semibold tabular-nums">{money(Number(form.price || 0))}</p>
                 <p className="text-xs text-ink-2">{t('publisher.new.previewSamples', { n: num(form.samples), pages: num(Number(form.pages || 0)) })}</p>
               </div>

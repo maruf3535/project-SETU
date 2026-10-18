@@ -6,6 +6,7 @@ import { buttonStyles, Dialog, inputStyles } from '../../components/ui'
 import { SKILLS } from '../../data/demo/challenges'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useCurrentStudent, useDemo } from '../../store/DemoStore'
+import { slugify } from '../public/publicProfiles'
 
 const evidenceIcons = { project: FolderGit2, award: Award, challenge: Target, research: FlaskConical }
 const levelWidth = { beginner: '35%', intermediate: '65%', advanced: '90%' }
@@ -22,7 +23,7 @@ export default function Portfolio() {
   const skills = [...student.skills].sort((a, b) => Number(b.verified) - Number(a.verified))
 
   async function share() {
-    const link = `${window.location.origin}${window.location.pathname}#/student/portfolio`
+    const link = `${window.location.origin}${window.location.pathname}#/u/${slugify(student.name)}`
     try {
       await navigator.clipboard.writeText(link)
     } catch {
@@ -116,7 +117,7 @@ export default function Portfolio() {
                   <span className="min-w-0">
                     <span className="block font-semibold">{L(item.title)}</span>
                     <span className="block text-sm text-ink-2">
-                      {t(`common.evidenceKinds.${item.kind}`)} · {L(item.by)}
+                      {L(item.by).startsWith(t(`common.evidenceKinds.${item.kind}`)) ? L(item.by) : `${t(`common.evidenceKinds.${item.kind}`)} · ${L(item.by)}`}
                     </span>
                   </span>
                 </li>

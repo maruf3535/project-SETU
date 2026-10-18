@@ -1,4 +1,4 @@
-import { Award, BadgeCheck, Camera, Lock, PencilLine, ShieldCheck, Trash2 } from 'lucide-react'
+import { Award, BadgeCheck, Camera, Copy, ExternalLink, Globe, Lock, PencilLine, ShieldCheck, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Avatar from '../../components/Avatar'
@@ -8,6 +8,8 @@ import { buttonStyles, inputStyles } from '../../components/ui'
 import { signupFields } from '../../data/onboarding'
 import { initialsOf } from '../../data/demo/profiles'
 import { useI18n } from '../../i18n/I18nProvider'
+import { useDemo } from '../../store/DemoStore'
+import { defaultPrivacy, publicDirectory, publicPathFor, publicUrlFor } from '../public/publicProfiles'
 import { useProfile } from './useProfile'
 
 const DIVISIONS = ['dhaka', 'chattogram', 'rajshahi', 'khulna', 'barishal', 'sylhet', 'rangpur', 'mymensingh']
@@ -43,6 +45,68 @@ function Row({ label, children }) {
       <dt className="text-sm text-ink-2">{label}</dt>
       <dd className="min-w-0 font-medium break-words">{children}</dd>
     </div>
+  )
+}
+
+const PRIVACY_KEYS = ['public', 'contact', 'rating', 'earnings']
+// Rating and earnings only exist on student profiles
+const privacyKeysFor = (role) => (role === 'student' ? PRIVACY_KEYS : ['public', 'contact'])
+
+// The shareable, government-verified public page: link, copy, open, and (while editing) what it shows
+function PublicProfileSection({ role, profileId, editing }) {
+  const { t } = useI18n()
+  const demo = useDemo()
+  const toast = useToast()
+  const record = publicDirectory(demo).find((r) => r.id === profileId)
+  if (!record) return null
+  const privacy = { ...defaultPrivacy(role), ...(record.privacy ?? {}) }
+  const url = publicUrlFor(record)
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch {
+      // clipboard can be blocked; the link is also shown as selectable text
+    }
+    toast(t('publicProfile.copied'))
+  }
+
+  return (
+    <section className="rounded-2xl border border-line bg-surface p-5">
+      <h3 className="flex items-center gap-2 text-xs font-semibold tracking-[0.12em] text-ink-2 uppercase">
+        <Globe className="size-4 text-primary" /> {t('profile.publicTitle')}
+      </h3>
+      <p className="mt-2 text-sm text-ink-2">{t('profile.publicBody')}</p>
+      <p className="mt-3 rounded-xl bg-surface-2 px-3 py-2 font-mono text-sm break-all select-all">{url}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button type="button" onClick={copy} className={buttonStyles.ghost}>
+          <Copy className="size-4" /> {t('publicProfile.copy')}
+        </button>
+        <Link to={publicPathFor(record)} target="_blank" rel="noreferrer" className={buttonStyles.ghost}>
+          <ExternalLink className="size-4" /> {t('profile.viewPublic')}
+        </Link>
+      </div>
+      <div className="mt-4 border-t border-line pt-4">
+        <p className="text-xs font-semibold text-ink-2">{t('profile.privacyTitle')}</p>
+        <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+          {privacyKeysFor(role).map((key) => (
+            <li key={key}>
+              {editing ? (
+                <label htmlFor={`privacy-${key}`} className="flex items-center gap-2.5 text-sm">
+                  <input id={`privacy-${key}`} name={`privacy-${key}`} type="checkbox" defaultChecked={privacy[key]} className="size-4 accent-[var(--primary)]" />
+                  {t(`profile.privacy.${key}`)}
+                </label>
+              ) : (
+                <span className="flex items-center gap-2.5 text-sm">
+                  <span className={`size-2 rounded-full ${privacy[key] ? 'bg-ok' : 'bg-line'}`} />
+                  {t(`profile.privacy.${key}`)} · <span className="text-ink-2">{privacy[key] ? t('profile.shown') : t('profile.hidden')}</span>
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
   )
 }
 
@@ -88,6 +152,7 @@ function ProfileForm({ role }) {
         district: form.get('district').trim(),
         bio: form.get('bio').trim(),
         photo,
+        privacy: Object.fromEntries(PRIVACY_KEYS.filter((k) => privacyKeysFor(role).includes(k)).map((k) => [k, form.get(`privacy-${k}`) === 'on'])),
       },
     })
     setEditing(false)
@@ -226,6 +291,8 @@ function ProfileForm({ role }) {
               <p className="mt-2 leading-relaxed">{L(profile.bio)}</p>
             )}
           </section>
+
+          <PublicProfileSection role={role} profileId={profile.id} editing={editing} />
 
           <p className="flex items-center gap-2 text-sm text-ink-2">
             <ShieldCheck className="size-4 shrink-0 text-primary" /> {t('profile.idPrivate')}

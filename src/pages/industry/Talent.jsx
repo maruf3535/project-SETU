@@ -8,6 +8,7 @@ import { SKILLS } from '../../data/demo/challenges'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useDemo } from '../../store/DemoStore'
 import { useOwnChallenges } from './shared'
+import PublicProfileLink from '../../components/PublicProfileLink'
 
 const DIVISIONS = ['dhaka', 'chattogram', 'rajshahi', 'khulna', 'barishal', 'sylhet', 'rangpur', 'mymensingh']
 const evidenceIcons = { project: FolderGit2, award: Award, challenge: Target, research: FlaskConical }
@@ -103,6 +104,7 @@ export default function Talent() {
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-1 font-semibold">
                       {student.name} <BadgeCheck className="size-4 text-primary" />
+                      <PublicProfileLink name={student.name} />
                     </p>
                     <p className="text-sm text-ink-2">
                       {student.university} · {L(student.dept)}

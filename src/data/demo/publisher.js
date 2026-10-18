@@ -1,3 +1,4 @@
+import { classes } from '../curriculum'
 // Demo data for the publisher portal. The signed-in publisher is fixed: Brightpage Publications.
 export const MY_PUBLISHER = { id: 'brightpage', name: 'Brightpage Publications', publicationId: 'BD-PUB-2041' }
 
@@ -31,31 +32,15 @@ export const reviewHistory = {
   ],
 }
 
-// Class/level choices when adding a book. `level` is the store level students filter by (school | college | admission | university).
-export const classOptions = [
-  { id: 'class6_8', level: 'school', label: { en: 'Class 6–8', bn: '৬ষ্ঠ–৮ম শ্রেণি' } },
-  { id: 'class9_10', level: 'school', label: { en: 'Class 9–10', bn: '৯ম–১০ম শ্রেণি' } },
-  { id: 'class11_12', level: 'college', label: { en: 'Class 11–12', bn: 'একাদশ–দ্বাদশ শ্রেণি' } },
-  { id: 'admission', level: 'admission', label: { en: 'University admission', bn: 'বিশ্ববিদ্যালয় ভর্তি' } },
-  { id: 'university', level: 'university', label: { en: 'University', bn: 'বিশ্ববিদ্যালয়' } },
-]
-
-export const subjects = {
-  physics: { en: 'Physics', bn: 'পদার্থবিজ্ঞান' },
-  chemistry: { en: 'Chemistry', bn: 'রসায়ন' },
-  math: { en: 'Higher Math', bn: 'উচ্চতর গণিত' },
-  biology: { en: 'Biology', bn: 'জীববিজ্ঞান' },
-  bangla: { en: 'Bangla', bn: 'বাংলা' },
-  english: { en: 'English', bn: 'ইংরেজি' },
-  ict: { en: 'ICT', bn: 'আইসিটি' },
-  algorithms: { en: 'Algorithms', bn: 'অ্যালগরিদম' },
-  all: { en: 'All subjects', bn: 'সব বিষয়' },
-}
+// Class/level choices when adding a book, from the national class list (src/data/curriculum.js)
+export const classOptions = classes.map(({ id, level, label }) => ({ id, level, label }))
 
 // Verified students on the platform per class/level, nationally, and each division's share.
 // Promotion reach is capped by the size of the chosen audience.
 export const audienceByClass = {
-  class6_8: 412000,
+  class6: 141000,
+  class7: 137000,
+  class8: 134000,
   class9_10: 538000,
   class11_12: 296000,
   admission: 148000,

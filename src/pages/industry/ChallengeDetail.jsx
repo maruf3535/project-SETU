@@ -7,6 +7,7 @@ import { useToast } from '../../components/Toast'
 import { buttonStyles, Dialog, inputStyles, Panel, SkillChip, StatusPill } from '../../components/ui'
 import { useI18n } from '../../i18n/I18nProvider'
 import { matchScore, useDemo } from '../../store/DemoStore'
+import PublicProfileLink from '../../components/PublicProfileLink'
 
 // Lifecycle position of each status on the six-step tracker
 const STEP_INDEX = { review: 1, open: 2, in_progress: 3, submitted: 4, paid: 6 }
@@ -40,6 +41,7 @@ function StudentLine({ student, skills, action }) {
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-1 truncate font-semibold">
           {student.name} <BadgeCheck className="size-4 shrink-0 text-primary" />
+          <PublicProfileLink name={student.name} />
         </p>
         <p className="truncate text-sm text-ink-2">
           {student.university} · {L(student.dept)}

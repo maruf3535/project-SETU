@@ -1,20 +1,18 @@
-// Looks up the sample PDF for a book or note. The manifest is optional at build time,
-// so anything without its own file (e.g. uploaded during the demo) falls back to the placeholder.
-const manifest = Object.values(import.meta.glob('../../data/demo/pdfs.js', { eager: true }))[0] ?? {}
+// The demo uses one shared 20-page sample PDF for every book, note and review file.
+// Swap in real files later by returning a different { file, pages } per id.
+const SAMPLE = { file: 'pdfs/sample.pdf', pages: 20, placeholder: false }
 
-const placeholder = manifest.placeholderPdf ?? { file: 'pdfs/placeholder.pdf', pages: 2 }
+// PDF page to open when a reviewer jumps to an AI-flagged problem (kept within the sample's 20 pages)
+const REVIEW_PAGES = { 'bk-highermath': 12, 'bk-chemlab': 4 }
 
-export function bookPdf(bookId) {
-  const entry = manifest.bookPdfs?.[bookId]
-  return entry ? { ...entry, placeholder: false } : { ...placeholder, placeholder: true }
+export function bookPdf() {
+  return SAMPLE
 }
 
-export function notePdf(noteId) {
-  const entry = manifest.notePdfs?.[noteId]
-  return entry ? { ...entry, placeholder: false } : { ...placeholder, placeholder: true }
+export function notePdf() {
+  return SAMPLE
 }
 
-// The PDF page to open when a reviewer jumps to an AI-flagged problem
 export function reviewPage(itemId) {
-  return manifest.reviewPages?.[itemId] ?? 1
+  return REVIEW_PAGES[itemId] ?? 1
 }

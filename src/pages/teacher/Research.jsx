@@ -8,7 +8,9 @@ import { researchTopics, teacherLevels } from '../../data/demo/teacher'
 import { useI18n } from '../../i18n/I18nProvider'
 import { matchScore, useDemo } from '../../store/DemoStore'
 import { Eyebrow } from './shared'
+import FindStudents from './FindStudents'
 import { newId, nowIso, useTeacher } from './useTeacher'
+import PublicProfileLink from '../../components/PublicProfileLink'
 
 export default function Research() {
   const { level } = useTeacher()
@@ -65,6 +67,9 @@ function ResearchDesk() {
   return (
     <div className="mx-auto max-w-6xl">
       <PageIntro title={t('teacher.research.title')} body={t('teacher.research.body')} />
+      <div className="mb-6">
+        <FindStudents topics={topics} onInvite={invite} />
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat tone="brand" label={t('teacher.research.stats.topics')} value={num(topics.length)} />
@@ -207,6 +212,7 @@ function TopicCard({ topic, students, studentById, onInvite }) {
                       <p className="flex flex-wrap items-center gap-x-2 font-semibold">
                         <span className="inline-flex items-center gap-1">
                           {student.name} <BadgeCheck className="size-4 text-primary" />
+                          <PublicProfileLink name={student.name} />
                         </span>
                         <span className="text-xs font-semibold text-ok tabular-nums">{t('common.match', { n: num(matchScore(student, topic.skills)) })}</span>
                       </p>

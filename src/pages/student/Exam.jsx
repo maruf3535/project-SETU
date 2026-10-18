@@ -1,6 +1,7 @@
 import { Clock3, Lightbulb, Timer, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { usePasscode } from '../../components/Passcode'
 import { buttonStyles } from '../../components/ui'
 import { questionBank } from '../../data/demo/questions'
 import { useI18n } from '../../i18n/I18nProvider'
@@ -137,13 +138,15 @@ export default function Exam() {
   const { level, config, student } = useCurrentStudent()
   const { dispatch } = useDemo()
   const navigate = useNavigate()
+  const confirmPasscode = usePasscode()
   const [attempt, setAttempt] = useState(0)
   const [running, setRunning] = useState(false)
   const pool = useMemo(() => questionBank[level].filter((q) => q.type === 'mcq'), [level])
   // A fresh random order for every attempt
   const questions = useMemo(() => (attempt ? shuffle(pool) : pool), [pool, attempt])
 
-  function start() {
+  async function start() {
+    if (!(await confirmPasscode(t('passcode.actions.startExam', { title: L(config.exam.title) })))) return
     setAttempt((n) => n + 1)
     setRunning(true)
   }

@@ -190,6 +190,7 @@ export function OpportunityDetail() {
   const { dispatch } = useDemo()
   const { student } = useCurrentStudent()
   const toast = useToast()
+  const confirmPasscode = usePasscode()
   const item = useMatchedOpportunities().find((o) => o.id === id)
   if (!item) return <Navigate to="/student/opportunities" replace />
 
@@ -197,7 +198,8 @@ export function OpportunityDetail() {
   const canApply = !item.applied && (!challenge || challenge.status === 'open')
   const mine = challenge?.solver === student.id
 
-  function apply() {
+  async function apply() {
+    if (!(await confirmPasscode(t('passcode.actions.apply', { title: L(item.title), org: item.org })))) return
     dispatch(challenge ? { type: 'apply', id: challenge.id, studentId: student.id } : { type: 'applyRole', roleId: item.id, studentId: student.id })
     toast(t('student.opps.appliedToast', { org: item.org }))
   }
