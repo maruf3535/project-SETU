@@ -9,15 +9,18 @@ import {
   ExternalLink,
   Globe,
   IdCard,
+  Mail,
   Map,
   Medal,
   Pencil,
+  Phone,
   Scale,
   ShieldCheck,
   Store,
   TriangleAlert,
   UserX,
 } from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Avatar from '../../components/Avatar'
 import { gutter } from '../../components/gutter'
@@ -379,6 +382,20 @@ function Impact() {
   )
 }
 
+// Shows public/team/<photo> when the file exists, otherwise the member's initials
+function MemberPhoto({ member }) {
+  const [failed, setFailed] = useState(false)
+  if (failed || !member.photo) return <Avatar initials={member.initials} className="size-28 text-3xl" />
+  return (
+    <img
+      src={`${import.meta.env.BASE_URL}team/${member.photo}`}
+      alt={member.name}
+      onError={() => setFailed(true)}
+      className="size-28 rounded-full object-cover ring-4 ring-accent/30"
+    />
+  )
+}
+
 function Team() {
   const { t } = useI18n()
 
@@ -386,13 +403,24 @@ function Team() {
     <section id="team" className={`${gutter} py-20`}>
       <div className="mx-auto max-w-6xl">
         <SectionHeading title={t('landing.team.title')} body={t('landing.team.body')} />
-        <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {team.map((member) => (
-            <li key={member.name} className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-4">
-              <Avatar initials={member.initials} className="size-12 text-base" />
-              <div className="min-w-0">
-                <p className="font-semibold">{member.name}</p>
-                <p className="text-sm text-ink-2">{t(`landing.team.${member.level}`)} · BUET</p>
+            <li key={member.name} className="flex flex-col items-center rounded-3xl border border-line bg-surface px-5 pt-7 pb-6 text-center">
+              <MemberPhoto member={member} />
+              <p className="mt-4 font-display text-xl leading-tight font-semibold">{member.name}</p>
+              <p className="mt-1 text-sm text-ink-2">{t(`landing.team.${member.level}`)}</p>
+              <p className="mt-0.5 text-xs font-semibold tracking-[0.14em] text-primary uppercase">BUET</p>
+              <div className="mt-4 grid w-full gap-1.5 border-t border-line pt-4 text-sm">
+                <a href={`mailto:${member.email}`} className="inline-flex min-w-0 items-center justify-center gap-2 text-ink hover:text-primary">
+                  <Mail className="size-4 shrink-0 text-ink-2" />
+                  <span className="truncate select-all">{member.email}</span>
+                </a>
+                {member.mobile && (
+                  <a href={`tel:${member.mobile.replace(/[^\d+]/g, '')}`} className="inline-flex items-center justify-center gap-2 text-ink hover:text-primary">
+                    <Phone className="size-4 shrink-0 text-ink-2" />
+                    <span className="select-all tabular-nums">{member.mobile}</span>
+                  </a>
+                )}
               </div>
             </li>
           ))}
