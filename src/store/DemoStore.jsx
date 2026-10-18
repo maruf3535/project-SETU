@@ -5,7 +5,8 @@ import { students } from '../data/demo/talent'
 
 // One shared, browser-only store so an action in one portal shows up in the others
 // (industry posts → government approves → student applies → industry pays).
-const STORAGE_KEY = 'setu.demo.v1'
+// Bump the version whenever the seed data changes, so browsers drop their old copy
+const STORAGE_KEY = 'setu.demo.v2'
 
 function seed() {
   return structuredClone({ challenges, projects, students })
