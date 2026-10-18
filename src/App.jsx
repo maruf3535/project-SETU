@@ -8,6 +8,7 @@ import SignIn from './pages/onboarding/SignIn'
 import Verify from './pages/onboarding/Verify'
 import Welcome from './pages/onboarding/Welcome'
 import PortalPlaceholder from './pages/PortalPlaceholder'
+import Profile from './pages/profile/Profile'
 import { extraRoutes, pages } from './pages/registry'
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
           {(extraRoutes[role] ?? []).map(({ path, element: Page }) => (
             <Route key={path} path={path} element={<Page />} />
           ))}
+          <Route path="profile" element={<Profile role={role} />} />
         </Route>
       ))}
       <Route path="*" element={<Navigate to="/" replace />} />

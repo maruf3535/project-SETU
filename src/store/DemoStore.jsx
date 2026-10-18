@@ -1,15 +1,36 @@
 import { createContext, useContext, useEffect, useMemo, useReducer } from 'react'
+import { books } from '../data/demo/books'
 import { challenges } from '../data/demo/challenges'
+import { notes } from '../data/demo/notes'
 import { projects } from '../data/demo/projects'
+import { studentLevels } from '../data/demo/studentLevels'
 import { students } from '../data/demo/talent'
 
 // One shared, browser-only store so an action in one portal shows up in the others
 // (industry posts → government approves → student applies → industry pays).
 // Bump the version whenever the seed data changes, so browsers drop their old copy
-const STORAGE_KEY = 'setu.demo.v2'
+const STORAGE_KEY = 'setu.demo.v5'
 
 function seed() {
-  return structuredClone({ challenges, projects, students })
+  return structuredClone({
+    challenges,
+    projects,
+    students,
+    notes,
+    books,
+    studentLevel: 'university',
+    // Reward points per demo student, keyed by student id
+    points: Object.fromEntries(Object.values(studentLevels).map((l) => [l.studentId, l.points])),
+    ratedNotes: [],
+    purchases: [],
+    roleApplications: [],
+    lastExam: null,
+    sales: [],
+    promotions: [],
+    profiles: {},
+    portalState: {},
+    seen: [],
+  })
 }
 
 function readStored() {
@@ -75,6 +96,81 @@ function reducer(state, action) {
           return { ...p, milestones }
         }),
       }
+    // Government review: send a challenge back to its poster with a note
+    case 'returnChallenge':
+      return updateChallenge(state, action.id, () => ({ status: 'returned', reviewNote: action.note }))
+    // Government review of a guide book listing; status: live | review | fix
+    case 'reviewBook':
+      return { ...state, books: state.books.map((b) => (b.id === action.bookId ? { ...b, status: action.status, reviewNote: action.note ?? b.reviewNote } : b)) }
+    case 'addBook':
+      return { ...state, books: [action.book, ...state.books] }
+    case 'promoteBook':
+      return { ...state, promotions: [action.promotion, ...(state.promotions ?? [])] }
+    // Free-form, persisted state a portal can keep without its own reducer case, e.g. key 'teacher.research'
+    case 'setPortalState':
+      return { ...state, portalState: { ...(state.portalState ?? {}), [action.key]: action.value } }
+    // Saved profile edits; a student's new name also shows wherever other portals list that student
+    case 'updateProfile': {
+      const profiles = { ...(state.profiles ?? {}), [action.id]: { ...(state.profiles?.[action.id] ?? {}), ...action.changes } }
+      const students = action.changes.name
+        ? state.students.map((s) => (s.id === action.id ? { ...s, name: action.changes.name, initials: action.changes.initials ?? s.initials } : s))
+        : state.students
+      return { ...state, profiles, students }
+    }
+    case 'markSeen':
+      return { ...state, seen: [...new Set([...(state.seen ?? []), ...action.ids])] }
+    case 'setLevel':
+      return { ...state, studentLevel: action.level }
+    case 'addPoints':
+      return { ...state, points: { ...state.points, [action.studentId]: (state.points[action.studentId] ?? 0) + action.amount } }
+    case 'finishExam':
+      return {
+        ...state,
+        lastExam: action.result,
+        points: { ...state.points, [action.result.studentId]: (state.points[action.result.studentId] ?? 0) + action.result.earned },
+      }
+    case 'rateNote': {
+      // A new rating moves the note's average and pays the rater 5 points
+      const notes = state.notes.map((n) =>
+        n.id === action.noteId
+          ? { ...n, rating: Math.round(((n.rating * n.ratings + action.stars) / (n.ratings + 1)) * 10) / 10, ratings: n.ratings + 1 }
+          : n,
+      )
+      return {
+        ...state,
+        notes,
+        ratedNotes: [...state.ratedNotes, `${action.studentId}:${action.noteId}`],
+        points: { ...state.points, [action.studentId]: (state.points[action.studentId] ?? 0) + 5 },
+      }
+    }
+    case 'uploadNote':
+      return { ...state, notes: [action.note, ...state.notes] }
+    // status: reviewed | in_review | rejected
+    case 'reviewNote':
+      return { ...state, notes: state.notes.map((n) => (n.id === action.noteId ? { ...n, status: action.status, reviewNote: action.note ?? n.reviewNote } : n)) }
+    case 'buyBook': {
+      const book = state.books.find((b) => b.id === action.bookId)
+      return {
+        ...state,
+        purchases: [...state.purchases, `${action.studentId}:${action.bookId}`],
+        books: state.books.map((b) => (b.id === action.bookId ? { ...b, sold: b.sold + 1, readers: b.readers + 1 } : b)),
+        points: action.pointsUsed
+          ? { ...state.points, [action.studentId]: state.points[action.studentId] - action.pointsUsed }
+          : state.points,
+        sales: [...(state.sales ?? []), { bookId: book.id, amount: action.paid, at: new Date().toISOString() }],
+      }
+    }
+    case 'applyRole':
+      return { ...state, roleApplications: [...new Set([...state.roleApplications, `${action.studentId}:${action.roleId}`])] }
+    case 'addSkill':
+      return {
+        ...state,
+        students: state.students.map((s) =>
+          s.id === action.studentId && !s.skills.some((x) => x.name === action.skill)
+            ? { ...s, skills: [...s.skills, { name: action.skill, level: 'beginner', verified: false }] }
+            : s,
+        ),
+      }
     case 'reset':
       return seed()
     default:
@@ -118,3 +214,11 @@ export function matchScore(student, skills) {
 }
 
 export const ESCROW_STATUSES = ['review', 'open', 'in_progress', 'submitted']
+
+// The demo student for the current level of the student portal
+export function useCurrentStudent() {
+  const { studentLevel, studentById, points } = useDemo()
+  const level = studentLevels[studentLevel]
+  const student = studentById[level.studentId]
+  return { level: studentLevel, config: level, student, points: points[student.id] ?? 0 }
+}

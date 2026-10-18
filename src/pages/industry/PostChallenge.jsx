@@ -1,4 +1,4 @@
-import { Lock, Send, ShieldCheck, Users } from 'lucide-react'
+import { Check, Lock, Send, ShieldCheck, Users } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../../components/Toast'
@@ -29,10 +29,17 @@ export default function PostChallenge() {
   const navigate = useNavigate()
   const [skills, setSkills] = useState(['Bangla translation', 'Technical writing'])
   const [reward, setReward] = useState(4000)
-  const [team, setTeam] = useState('solo')
+  const [formats, setFormats] = useState(['solo', 'team'])
 
   function toggleSkill(skill) {
     setSkills((current) => (current.includes(skill) ? current.filter((s) => s !== skill) : [...current, skill]))
+  }
+
+  // Solo, team or both; the last remaining option can't be switched off
+  function toggleFormat(option) {
+    setFormats((current) =>
+      current.includes(option) ? (current.length > 1 ? current.filter((f) => f !== option) : current) : [...current, option],
+    )
   }
 
   function handleSubmit(event) {
@@ -52,7 +59,7 @@ export default function PostChallenge() {
         reward: Number(reward),
         deadline: form.get('deadline'),
         postedAt: new Date().toISOString().slice(0, 10),
-        team,
+        formats,
         mentor: form.get('mentor') ? 'Open to a teacher mentor' : null,
         status: 'review',
         applicants: [],
@@ -145,18 +152,27 @@ export default function PostChallenge() {
           </div>
           <fieldset>
             <legend className="text-sm font-medium">{t('industry.post.fields.format')}</legend>
-            <div className="mt-2 inline-flex rounded-xl border border-line p-1">
-              {['solo', 'team'].map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  aria-pressed={team === option}
-                  onClick={() => setTeam(option)}
-                  className={`rounded-lg px-4 py-1.5 text-sm font-semibold ${team === option ? 'bg-brand text-brand-ink' : 'text-ink-2'}`}
-                >
-                  {t(`common.${option}`)}
-                </button>
-              ))}
+            <span className="ml-2 text-xs text-ink-2">{t('industry.post.fields.formatHint')}</span>
+            <div className="mt-2 flex gap-2">
+              {['solo', 'team'].map((option) => {
+                const on = formats.includes(option)
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => toggleFormat(option)}
+                    className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
+                      on ? 'border-primary bg-[color-mix(in_oklab,var(--primary)_12%,transparent)] text-primary' : 'border-line text-ink-2 hover:text-ink'
+                    }`}
+                  >
+                    <span className={`grid size-4 place-items-center rounded border ${on ? 'border-primary bg-primary text-primary-ink' : 'border-line'}`}>
+                      {on && <Check className="size-3" strokeWidth={3} />}
+                    </span>
+                    {t(`common.${option}`)}
+                  </button>
+                )
+              })}
             </div>
           </fieldset>
           <label htmlFor="post-mentor" className="flex items-center gap-3 text-sm">

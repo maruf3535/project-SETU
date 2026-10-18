@@ -1,7 +1,14 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import bn from './bn'
-import en from './en'
+import bnBase from './bn'
+import enBase from './en'
+import government from './portals/government'
+import publisher from './portals/publisher'
+import teacher from './portals/teacher'
 
+// Portal text lives in its own file per portal, mounted under the portal's name (t('teacher.…'))
+const portalTexts = { teacher, government, publisher }
+const en = { ...enBase, ...Object.fromEntries(Object.entries(portalTexts).map(([k, v]) => [k, v.en])) }
+const bn = { ...bnBase, ...Object.fromEntries(Object.entries(portalTexts).map(([k, v]) => [k, v.bn])) }
 const dictionaries = { en, bn }
 const STORAGE_KEY = 'setu.lang'
 

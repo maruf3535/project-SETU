@@ -153,7 +153,7 @@ export default function ChallengeDetail() {
             </div>
             <div>
               <dt className="text-ink-2">{t('industry.detail.format')}</dt>
-              <dd className="mt-0.5 font-semibold">{t(`common.${challenge.team}`)}</dd>
+              <dd className="mt-0.5 font-semibold">{(challenge.formats ?? [challenge.team]).map((f) => t(`common.${f}`)).join(' · ')}</dd>
             </div>
             {challenge.mentor && (
               <div className="col-span-2">

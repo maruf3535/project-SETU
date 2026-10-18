@@ -9,6 +9,7 @@ const statusStyles = {
   in_progress: 'bg-surface-2 text-ink',
   submitted: 'bg-accent text-accent-ink',
   paid: 'bg-ok-soft text-ok',
+  returned: 'bg-bad-soft text-bad',
 }
 
 const milestoneStyles = {
