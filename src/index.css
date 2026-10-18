@@ -171,6 +171,21 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* Tailwind v4 resets buttons to the default cursor; every clickable control should show the hand */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='radio'],
+  [role='menuitem'],
+  select,
+  summary,
+  label:has(> input[type='file']) {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
   h1,
   h2,
   h3 {
