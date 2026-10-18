@@ -1,9 +1,11 @@
-import { ArrowLeft, BadgeCheck, BookOpen, Check, Search, Star, Tag } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, BookOpen, BookOpenText, Check, Search, Star, Tag } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import { bookPdf } from '../../components/pdf/pdfSources'
+import { useReader } from '../../components/pdf/useReader'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, Dialog, inputStyles, PageIntro } from '../../components/ui'
-import { POINTS_DISCOUNT, SAMPLE_PAGES } from '../../data/demo/books'
+import { POINTS_DISCOUNT } from '../../data/demo/books'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useCurrentStudent, useDemo } from '../../store/DemoStore'
 
@@ -108,12 +110,25 @@ export function BookDetail() {
   const owned = useOwned()
   const toast = useToast()
   const [buying, setBuying] = useState(false)
+  const [openReader, reader] = useReader()
 
   const book = books.find((b) => b.id === id && b.status === 'live')
   if (!book) return <Navigate to="/student/store" replace />
 
   const discounted = Math.round(book.price * (1 - POINTS_DISCOUNT.percent / 100))
   const canUsePoints = points >= POINTS_DISCOUNT.points
+  const pdf = bookPdf(book.id)
+
+  // Before purchase only the free sample is offered; after purchase the demo still ships the same sample pages
+  function read(page, full) {
+    openReader({
+      src: pdf.file,
+      title: L(book.title),
+      initialPage: Math.min(page, pdf.pages),
+      pageLabels: pdf.pageLabels,
+      note: full ? t('pdf.fullNote', { n: num(pdf.pages) }) : t('pdf.sampleNote', { n: num(pdf.pages) }),
+    })
+  }
 
   function buy(usePoints) {
     dispatch({
@@ -179,33 +194,50 @@ export function BookDetail() {
               <p className="font-display text-3xl font-semibold tabular-nums">{money(book.price)}</p>
             </div>
             {owned(book.id) ? (
-              <span className="inline-flex items-center gap-2 rounded-xl bg-ok-soft px-4 py-2.5 text-sm font-semibold text-ok">
-                <BookOpen className="size-4" /> {t('student.store.owned')}
-              </span>
+              <>
+                <span className="inline-flex items-center gap-2 rounded-xl bg-ok-soft px-4 py-2.5 text-sm font-semibold text-ok">
+                  <BookOpen className="size-4" /> {t('student.store.owned')}
+                </span>
+                <button type="button" onClick={() => read(1, true)} className={buttonStyles.accent}>
+                  <BookOpenText className="size-4" /> {t('student.store.read')}
+                </button>
+              </>
             ) : (
-              <button type="button" onClick={() => setBuying(true)} className={buttonStyles.accent}>
-                {t('student.store.buy')}
-              </button>
+              <>
+                <button type="button" onClick={() => read(1, false)} className="inline-flex items-center gap-2 rounded-xl border border-brand-ink/25 px-4 py-2.5 text-sm font-semibold hover:bg-brand-ink/10">
+                  <BookOpenText className="size-4" /> {t('pdf.readSample')}
+                </button>
+                <button type="button" onClick={() => setBuying(true)} className={buttonStyles.accent}>
+                  {t('student.store.buy')}
+                </button>
+              </>
             )}
           </div>
         </div>
       </div>
 
       <section className="mt-10">
-        <h3 className="text-xs font-semibold tracking-[0.12em] text-ink-2 uppercase">{t('student.store.sample', { n: num(SAMPLE_PAGES) })}</h3>
-        {/* Drawn sample pages; the full soft copy unlocks after purchase */}
+        <h3 className="text-xs font-semibold tracking-[0.12em] text-ink-2 uppercase">{t('student.store.sample', { n: num(pdf.pages) })}</h3>
+        {/* Drawn page tiles; each opens the sample PDF at that page */}
         <div className="-mx-1 mt-3 flex gap-3 overflow-x-auto px-1 pb-2">
-          {Array.from({ length: SAMPLE_PAGES }, (_, i) => (
-            <div key={i} className="w-36 shrink-0 rounded-lg border border-line bg-surface p-3" aria-label={t('student.store.page', { n: num(i + 1) })}>
+          {Array.from({ length: pdf.pages }, (_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => read(i + 1, owned(book.id))}
+              aria-label={t('pdf.openPage', { n: num(i + 1) })}
+              className="w-36 shrink-0 rounded-lg border border-line bg-surface p-3 text-left transition-colors hover:border-primary"
+            >
               <div className="h-2 w-2/3 rounded-full bg-ink/20" />
               {Array.from({ length: 9 }, (__, l) => (
                 <div key={l} className="mt-2 h-1.5 rounded-full bg-ink/10" style={{ width: `${60 + ((i * 7 + l * 13) % 40)}%` }} />
               ))}
-              <p className="mt-3 text-right text-[10px] text-ink-2 tabular-nums">{num(i + 1)}</p>
-            </div>
+              <p className="mt-3 text-right text-[10px] text-ink-2 tabular-nums">{pdf.pageLabels?.[i] ?? num(i + 1)}</p>
+            </button>
           ))}
         </div>
       </section>
+      {reader}
 
       <Dialog open={buying} title={t('student.store.buyTitle', { title: L(book.title) })} onClose={() => setBuying(false)}>
         <div className="grid gap-3">

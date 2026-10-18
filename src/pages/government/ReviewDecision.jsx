@@ -1,6 +1,8 @@
-import { ArrowLeft, Check, ChevronLeft, ChevronRight, CircleCheck, Clock3, Lock, ShieldCheck, TriangleAlert, Undo2 } from 'lucide-react'
+import { ArrowLeft, BookOpenText, Check, ChevronLeft, ChevronRight, CircleCheck, Clock3, Lock, ShieldCheck, TriangleAlert, Undo2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { bookPdf, notePdf, reviewPage } from '../../components/pdf/pdfSources'
+import { useReader } from '../../components/pdf/useReader'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, inputStyles, Panel, SkillChip } from '../../components/ui'
 import { bookChecks, challengeFlags } from '../../data/demo/government'
@@ -19,13 +21,13 @@ const LINE_SETS = [
   [86, 64, 90, 76, 84, 48],
 ]
 
-function PageThumb({ label, flagged, handwritten }) {
+function PageThumb({ label, flagged, handwritten, onOpen }) {
   const { t } = useI18n()
   const lines = LINE_SETS[label.length % LINE_SETS.length]
   return (
-    <figure className="min-w-0">
+    <button type="button" onClick={onOpen} aria-label={t('pdf.openPageLabel', { label })} className="group block min-w-0 text-left">
       <div
-        className={`relative aspect-[3/4] rounded-lg border bg-surface p-2.5 shadow-sm ${flagged ? 'border-warn ring-2 ring-warn' : 'border-line'}`}
+        className={`relative aspect-[3/4] rounded-lg border bg-surface p-2.5 shadow-sm transition-colors group-hover:border-primary ${flagged ? 'border-warn ring-2 ring-warn' : 'border-line'}`}
         aria-hidden="true"
       >
         {!handwritten && <span className="mb-2 block h-1.5 w-1/2 rounded-full bg-ink/70" />}
@@ -44,8 +46,8 @@ function PageThumb({ label, flagged, handwritten }) {
           </span>
         )}
       </div>
-      <figcaption className="mt-1.5 text-center text-xs text-ink-2 tabular-nums">{label}</figcaption>
-    </figure>
+      <span className="mt-1.5 block text-center text-xs text-ink-2 tabular-nums group-hover:text-primary">{label}</span>
+    </button>
   )
 }
 
@@ -96,8 +98,21 @@ const COVER_STYLES = { teal: 'bg-brand text-brand-ink', amber: 'bg-accent text-a
 
 function BookPreview({ book }) {
   const { t, L, money, num } = useI18n()
+  const [openReader, reader] = useReader()
   const flaggedPage = bookChecks[book.id]?.flaggedPage
   const samplePages = [...new Set([1, 12, 45, flaggedPage, 132, 200].filter((p) => p && p <= book.pages))].sort((a, b) => a - b)
+  const pdf = bookPdf(book.id)
+
+  // The thumbnails carry printed page numbers; the sample PDF holds 12 of them, with any flagged page included
+  function read(flagged) {
+    openReader({
+      src: pdf.file,
+      title: L(book.title),
+      initialPage: flagged ? Math.min(reviewPage(book.id), pdf.pages) : 1,
+      pageLabels: pdf.pageLabels,
+      note: pdf.placeholder ? t('pdf.placeholderNote') : flagged && flaggedPage ? t('pdf.flagNote', { n: num(flaggedPage) }) : t('pdf.reviewNote'),
+    })
+  }
 
   return (
     <div className="grid gap-6 p-5">
@@ -130,34 +145,65 @@ function BookPreview({ book }) {
         </div>
       </div>
       <section>
-        <SectionLabel>{t('government.review.samplePages')}</SectionLabel>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <SectionLabel>{t('government.review.samplePages')}</SectionLabel>
+          <div className="flex flex-wrap gap-2">
+            {flaggedPage && (
+              <button type="button" onClick={() => read(true)} className={`${buttonStyles.ghost} py-1.5`}>
+                <TriangleAlert className="size-4 text-warn" /> {t('pdf.openFlagged', { n: num(flaggedPage) })}
+              </button>
+            )}
+            <button type="button" onClick={() => read(false)} className={`${buttonStyles.ghost} py-1.5`}>
+              <BookOpenText className="size-4" /> {t('pdf.openPdf')}
+            </button>
+          </div>
+        </div>
         <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-6">
           {samplePages.map((page) => (
-            <PageThumb key={page} label={t('government.review.page', { n: num(page) })} flagged={page === flaggedPage} />
+            <PageThumb key={page} label={t('government.review.page', { n: num(page) })} flagged={page === flaggedPage} onOpen={() => read(page === flaggedPage)} />
           ))}
         </div>
       </section>
+      {reader}
     </div>
   )
 }
 
 function NotePreview({ note }) {
   const { t, L, num } = useI18n()
+  const [openReader, reader] = useReader()
   const shown = Math.min(note.pages, 6)
+  const pdf = notePdf(note.id)
+
+  function read(page) {
+    openReader({
+      src: pdf.file,
+      title: L(note.title),
+      initialPage: Math.min(page, pdf.pages),
+      note: pdf.placeholder ? t('pdf.placeholderNote') : t('pdf.reviewNote'),
+    })
+  }
+
   return (
     <div className="grid gap-5 p-5">
       <p className="text-ink-2">
         {L(note.subject)} · {note.author}
       </p>
       <section>
-        <SectionLabel>{t('government.review.pages', { n: num(note.pages) })}</SectionLabel>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <SectionLabel>{t('government.review.pages', { n: num(note.pages) })}</SectionLabel>
+          <button type="button" onClick={() => read(1)} className={`${buttonStyles.ghost} py-1.5`}>
+            <BookOpenText className="size-4" /> {t('pdf.openPdf')}
+          </button>
+        </div>
         <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-6">
           {Array.from({ length: shown }, (_, i) => (
-            <PageThumb key={i} label={t('government.review.page', { n: num(i + 1) })} handwritten />
+            <PageThumb key={i} label={t('government.review.page', { n: num(i + 1) })} handwritten onOpen={() => read(i + 1)} />
           ))}
         </div>
         {note.pages > shown && <p className="mt-2 text-sm text-ink-2">{t('government.review.morePages', { n: num(note.pages - shown) })}</p>}
       </section>
+      {reader}
     </div>
   )
 }

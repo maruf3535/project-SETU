@@ -1,5 +1,7 @@
-import { ArrowLeft, Check, CircleAlert, CircleCheck, Clock3, FileUp, Send, Star, Undo2 } from 'lucide-react'
+import { ArrowLeft, BookOpenText, Check, CircleAlert, CircleCheck, Clock3, FileUp, Send, Star, Undo2 } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import { bookPdf } from '../../components/pdf/pdfSources'
+import { useReader } from '../../components/pdf/useReader'
 import { useToast } from '../../components/Toast'
 import { buttonStyles, Panel } from '../../components/ui'
 import { SAMPLE_PAGES } from '../../data/demo/books'
@@ -14,19 +16,21 @@ const eventIcons = {
   approved: { icon: Check, tone: 'bg-ok-soft text-ok' },
 }
 
-// A drawn page: running head, a few text lines, page number
-function SamplePage({ n, total }) {
+// A drawn page: running head, a few text lines, page number. Opens the PDF reader at that page.
+function SamplePage({ n, total, onOpen }) {
   const { t, num } = useI18n()
   return (
     <li className="w-24 shrink-0">
-      <div className="flex aspect-[3/4] flex-col gap-1.5 rounded-md border border-line bg-surface p-2.5 shadow-sm">
-        <span className="h-1.5 w-1/2 rounded-full bg-primary/40" />
-        {[90, 100, 80, 95, 70, 100, 60].map((w, i) => (
-          <span key={i} className="h-1 rounded-full bg-line" style={{ width: `${w}%` }} />
-        ))}
-        <span className="mt-auto self-center text-[0.6rem] text-ink-2 tabular-nums">{num(n)}</span>
-      </div>
-      <p className="mt-1.5 text-center text-xs text-ink-2">{t('publisher.detail.pageN', { n: num(n), total: num(total) })}</p>
+      <button type="button" onClick={onOpen} aria-label={t('pdf.openPage', { n: num(n) })} className="group block w-full">
+        <div className="flex aspect-[3/4] flex-col gap-1.5 rounded-md border border-line bg-surface p-2.5 shadow-sm transition-colors group-hover:border-primary">
+          <span className="h-1.5 w-1/2 rounded-full bg-primary/40" />
+          {[90, 100, 80, 95, 70, 100, 60].map((w, i) => (
+            <span key={i} className="h-1 rounded-full bg-line" style={{ width: `${w}%` }} />
+          ))}
+          <span className="mt-auto self-center text-[0.6rem] text-ink-2 tabular-nums">{num(n)}</span>
+        </div>
+        <p className="mt-1.5 text-center text-xs text-ink-2 group-hover:text-primary">{t('publisher.detail.pageN', { n: num(n), total: num(total) })}</p>
+      </button>
     </li>
   )
 }
@@ -36,12 +40,24 @@ export default function ListingDetail() {
   const { t, L, money, num, date } = useI18n()
   const { books, portalState, dispatch } = useDemo()
   const toast = useToast()
+  const [openReader, reader] = useReader()
   const book = books.find((b) => b.id === id && b.publisherId === 'brightpage')
   const trail = useReviewTrail(book ?? { id })
   if (!book) return <Navigate to="/publisher/listings" replace />
 
   const samples = book.samplePages ?? SAMPLE_PAGES
   const lastReturned = trail.map((e) => e.kind).lastIndexOf('returned')
+  const pdf = bookPdf(book.id)
+
+  function readAt(page) {
+    openReader({
+      src: pdf.file,
+      title: L(book.title),
+      initialPage: Math.min(page, pdf.pages),
+      pageLabels: pdf.pageLabels,
+      note: pdf.placeholder ? t('pdf.placeholderNote') : t('pdf.sampleNote', { n: num(pdf.pages) }),
+    })
+  }
 
   function uploadCorrected() {
     const events = portalState?.['publisher.events'] ?? []
@@ -104,11 +120,18 @@ export default function ListingDetail() {
           </section>
 
           <section className="min-w-0">
-            <h3 className="text-xs font-semibold tracking-[0.12em] text-ink-2 uppercase">{t('publisher.detail.samples', { n: num(samples) })}</h3>
-            <p className="mt-1 text-sm text-ink-2">{t('publisher.detail.samplesNote')}</p>
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h3 className="text-xs font-semibold tracking-[0.12em] text-ink-2 uppercase">{t('publisher.detail.samples', { n: num(samples) })}</h3>
+                <p className="mt-1 text-sm text-ink-2">{t('publisher.detail.samplesNote')}</p>
+              </div>
+              <button type="button" onClick={() => readAt(1)} className={buttonStyles.ghost}>
+                <BookOpenText className="size-4" /> {t('pdf.openPdf')}
+              </button>
+            </div>
             <ol className="mt-3 flex gap-3 overflow-x-auto pb-2" aria-label={t('publisher.detail.samples', { n: num(samples) })}>
               {Array.from({ length: samples }, (_, i) => (
-                <SamplePage key={i} n={i + 1} total={samples} />
+                <SamplePage key={i} n={i + 1} total={samples} onOpen={() => readAt(i + 1)} />
               ))}
             </ol>
           </section>
@@ -167,6 +190,7 @@ export default function ListingDetail() {
           </Panel>
         </div>
       </div>
+      {reader}
     </div>
   )
 }

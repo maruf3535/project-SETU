@@ -1,4 +1,6 @@
-import { CircleCheck, Clock3, FileUp, Gift, Plus, Star, Undo2 } from 'lucide-react'
+import { BookOpenText, CircleCheck, Clock3, FileUp, Gift, Plus, Star, Undo2 } from 'lucide-react'
+import { notePdf } from '../../components/pdf/pdfSources'
+import { useReader } from '../../components/pdf/useReader'
 import { useState } from 'react'
 import Avatar from '../../components/Avatar'
 import { useToast } from '../../components/Toast'
@@ -144,6 +146,17 @@ export default function Notes() {
   const [tab, setTab] = useState('top')
   const [rating, setRating] = useState(null)
   const [uploading, setUploading] = useState(false)
+  const [openReader, reader] = useReader()
+
+  function readNote(note, page) {
+    const pdf = notePdf(note.id)
+    openReader({
+      src: pdf.file,
+      title: L(note.title),
+      initialPage: Math.min(page, pdf.pages),
+      note: pdf.placeholder ? t('pdf.placeholderNote') : undefined,
+    })
+  }
 
   const forLevel = notes.filter((n) => n.level === level)
   const shown =
@@ -197,16 +210,25 @@ export default function Notes() {
                         <status.icon className="size-3.5" /> {t(`student.notes.status.${note.status}`)}
                       </span>
                     </div>
-                    {/* Drawn page thumbnails stand in for the uploaded pages */}
-                    <div className="mt-4 grid grid-cols-3 gap-2" aria-hidden="true">
-                      {[0, 1, 2].map((i) => (
-                        <div key={i} className="aspect-[4/3] rounded-lg bg-surface-2 p-2.5">
+                    {/* Drawn page tiles; each opens the note's PDF at that page */}
+                    <div className="mt-4 grid grid-cols-3 gap-2">
+                      {[0, 1, 2].slice(0, Math.max(1, Math.min(3, note.pages))).map((i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => readNote(note, i + 1)}
+                          aria-label={t('pdf.openPage', { n: num(i + 1) })}
+                          className="aspect-[4/3] rounded-lg border border-transparent bg-surface-2 p-2.5 text-left transition-colors hover:border-primary"
+                        >
                           <div className="h-1.5 w-3/4 rounded-full bg-ink/15" />
                           <div className="mt-1.5 h-1.5 w-1/2 rounded-full bg-ink/10" />
                           <div className="mt-1.5 h-1.5 w-2/3 rounded-full bg-ink/10" />
-                        </div>
+                        </button>
                       ))}
                     </div>
+                    <button type="button" onClick={() => readNote(note, 1)} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+                      <BookOpenText className="size-4" /> {t('pdf.openNote')}
+                    </button>
                     <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
                       <span className="flex items-center gap-2 text-ink-2">
                         {note.ratings ? (
@@ -268,6 +290,7 @@ export default function Notes() {
       </div>
 
       {rating && <RateDialog note={rating} onClose={() => setRating(null)} />}
+      {reader}
       {uploading && <UploadDialog onClose={() => setUploading(false)} />}
     </div>
   )
