@@ -1,111 +1,155 @@
+@import "tailwindcss";
+
+/*
+  Setu design tokens, taken from the proposal: deep bridge-teal surfaces,
+  amber for the one thing that matters on a screen, teal-tinted neutrals.
+  Layout concept: a dark teal rail (the "bridge") beside a calm working canvas.
+*/
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  --canvas: #f2f5f4;
+  --surface: #ffffff;
+  --surface-2: #e7eeec;
+  --ink: #142a2e;
+  --ink-2: #557074;
+  --line: #d6e1df;
+  --brand: #16363d;
+  --brand-ink: #eef5f3;
+  --primary: #22666a;
+  --primary-ink: #ffffff;
+  --accent: #e8a23a;
+  --accent-ink: #2b1c05;
+  --accent-soft: #fbebd2;
+  --ok: #2e8657;
+  --ok-soft: #ddf1e5;
+  --warn: #b7741a;
+  --warn-soft: #fbebd2;
+  --bad: #be4337;
+  --bad-soft: #f8e0dc;
+  --role-student: #2a78bc;
+  --role-teacher: #2b9455;
+  --role-publisher: #d98e22;
+  --role-industry: #7650b5;
+  --role-government: #16363d;
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-body {
-  margin: 0;
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+  :root:not([data-theme="light"]) {
+    --canvas: #0d191b;
+    --surface: #13252a;
+    --surface-2: #1a3136;
+    --ink: #e3edeb;
+    --ink-2: #93abad;
+    --line: #26403f;
+    --brand: #0a1a1d;
+    --brand-ink: #e6f0ee;
+    --primary: #5eb1ab;
+    --primary-ink: #06201f;
+    --accent: #f0b252;
+    --accent-ink: #2b1c05;
+    --accent-soft: #3a2d16;
+    --ok: #5bc08a;
+    --ok-soft: #173428;
+    --warn: #e6a447;
+    --warn-soft: #3a2d16;
+    --bad: #ee7f71;
+    --bad-soft: #3d1e1a;
+    --role-student: #6aaee8;
+    --role-teacher: #5dc487;
+    --role-publisher: #f0b252;
+    --role-industry: #a889e0;
+    --role-government: #6fb7b2;
+    color-scheme: dark;
   }
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+
+:root[data-theme="dark"] {
+  --canvas: #0d191b;
+  --surface: #13252a;
+  --surface-2: #1a3136;
+  --ink: #e3edeb;
+  --ink-2: #93abad;
+  --line: #26403f;
+  --brand: #0a1a1d;
+  --brand-ink: #e6f0ee;
+  --primary: #5eb1ab;
+  --primary-ink: #06201f;
+  --accent: #f0b252;
+  --accent-ink: #2b1c05;
+  --accent-soft: #3a2d16;
+  --ok: #5bc08a;
+  --ok-soft: #173428;
+  --warn: #e6a447;
+  --warn-soft: #3a2d16;
+  --bad: #ee7f71;
+  --bad-soft: #3d1e1a;
+  --role-student: #6aaee8;
+  --role-teacher: #5dc487;
+  --role-publisher: #f0b252;
+  --role-industry: #a889e0;
+  --role-government: #6fb7b2;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-primary: var(--primary);
+  --color-primary-ink: var(--primary-ink);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-role: var(--role);
+}
+
+@theme {
+  /* Latin glyphs come from the first face, Bangla glyphs fall through to the second */
+  --font-sans: "Figtree", "Hind Siliguri", system-ui, sans-serif;
+  --font-display: "Newsreader", "Noto Serif Bengali", Georgia, serif;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
   }
-}
-p {
-  margin: 0;
-}
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
