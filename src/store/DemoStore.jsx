@@ -245,7 +245,7 @@ function reducer(state, action) {
     case 'replyReview':
       return { ...state, bookReviews: state.bookReviews.map((r) => (r.id === action.id ? { ...r, reply: { text: action.text, at: new Date().toISOString() } } : r)) }
     case 'reportReview':
-      return { ...state, bookReviews: state.bookReviews.map((r) => (r.id === action.id ? { ...r, status: 'reported', report: { reason: action.reason, at: new Date().toISOString() } } : r)) }
+      return { ...state, bookReviews: state.bookReviews.map((r) => (r.id === action.id ? { ...r, status: 'reported', report: { reason: action.reason, note: action.note || undefined, at: new Date().toISOString() } } : r)) }
     // Government decision on a reported review: keep it public or remove it
     case 'decideReview':
       return {

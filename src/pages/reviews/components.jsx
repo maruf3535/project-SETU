@@ -194,6 +194,7 @@ export function PublisherReviewActions({ review }) {
   const [mode, setMode] = useState(null)
   const [text, setText] = useState('')
   const [reason, setReason] = useState(REPORT_REASONS[0])
+  const [note, setNote] = useState('')
 
   return (
     <>
@@ -239,11 +240,23 @@ export function PublisherReviewActions({ review }) {
             </label>
           ))}
         </fieldset>
+        <label htmlFor="report-note" className="mt-4 block text-sm font-semibold">
+          {t('reviews.reportDetails')} <span className="font-normal text-ink-2">({t('reviews.optional')})</span>
+        </label>
+        <textarea
+          id="report-note"
+          rows={3}
+          maxLength={500}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder={t('reviews.reportDetailsHint')}
+          className={`${inputStyles} mt-2`}
+        />
         <p className="mt-3 text-xs text-ink-2">{L(review.text).slice(0, 120)}…</p>
         <button
           type="button"
           onClick={() => {
-            dispatch({ type: 'reportReview', id: review.id, reason })
+            dispatch({ type: 'reportReview', id: review.id, reason, note: note.trim() })
             setMode(null)
           }}
           className={`${buttonStyles.primary} mt-4 w-full`}

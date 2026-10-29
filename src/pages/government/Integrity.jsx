@@ -78,6 +78,11 @@ function ReportedReview({ review }) {
           <span className="flex w-full items-center gap-1.5 text-sm">
             <Flag className="size-4 text-bad" /> {t('reviews.gov.reportedFor', { reason: t(`reviews.reasons.${review.report.reason}`) })}
           </span>
+          {review.report.note && (
+            <blockquote className="w-full rounded-xl border-l-2 border-bad bg-surface-2 px-3 py-2 text-sm text-ink-2">
+              <span className="font-semibold text-ink">{t('reviews.gov.publisherNote')}:</span> {review.report.note}
+            </blockquote>
+          )}
           <button type="button" onClick={() => decide(true)} className={`${buttonStyles.ghost} py-2`}>
             <ShieldCheck className="size-4" /> {t('reviews.gov.keep')}
           </button>
