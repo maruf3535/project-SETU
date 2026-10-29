@@ -1,4 +1,4 @@
-import { ArrowLeft, BadgeCheck, BookOpen, BookOpenText, Check, Search, ShoppingBag, Star, Tag } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, BookOpen, BookOpenText, Check, MessageSquareText, Search, ShoppingBag, Star, Tag, Trophy } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { bookPdf } from '../../components/pdf/pdfSources'
@@ -9,6 +9,8 @@ import { buttonStyles, Dialog, inputStyles, PageIntro } from '../../components/u
 import { POINTS_DISCOUNT } from '../../data/demo/books'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useCurrentStudent, useDemo } from '../../store/DemoStore'
+import { BookReviews, PublicRankingLink, PublisherRankingTable, RankingExplainer } from '../reviews/components'
+import { bookSummary, round1 } from '../reviews/reviewData'
 
 const coverStyles = {
   teal: 'bg-primary text-primary-ink',
@@ -107,7 +109,7 @@ function Library() {
           const progress = reading[`${student.id}:${book.id}`]
           const origin =
             item.source === 'free'
-              ? t('student.library.free', { from: item.from })
+              ? t('student.library.free', { from: L(item.from) })
               : item.log
                 ? item.log.pointsUsed
                   ? t('student.library.boughtPoints', { date: date(item.log.at), amount: money(item.log.paid), points: num(item.log.pointsUsed) })
@@ -154,7 +156,7 @@ function Library() {
 
 export default function Store() {
   const [params, setParams] = useSearchParams()
-  const tab = params.get('tab') === 'library' ? 'library' : 'store'
+  const tab = ['library', 'ranking'].includes(params.get('tab')) ? params.get('tab') : 'store'
   const { t, num } = useI18n()
   const { purchases, freeCopies = [] } = useDemo()
   const { student } = useCurrentStudent()
@@ -167,16 +169,16 @@ export default function Store() {
     <div className="mx-auto max-w-6xl">
       <PageIntro title={t('nav.store')} body={t('student.store.body')} />
       <div role="tablist" aria-label={t('nav.store')} className="mb-5 inline-flex rounded-xl border border-line bg-surface p-1">
-        {['store', 'library'].map((key) => (
+        {['store', 'library', 'ranking'].map((key) => (
           <button
             key={key}
             type="button"
             role="tab"
             aria-selected={tab === key}
-            onClick={() => setParams(key === 'library' ? { tab: 'library' } : {}, { replace: true })}
+            onClick={() => setParams(key === 'store' ? {} : { tab: key }, { replace: true })}
             className={`inline-flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-semibold ${tab === key ? 'bg-brand text-brand-ink' : 'text-ink-2 hover:text-ink'}`}
           >
-            {key === 'library' ? <BookOpen className="size-4" /> : <ShoppingBag className="size-4" />}
+            {key === 'library' ? <BookOpen className="size-4" /> : key === 'ranking' ? <Trophy className="size-4" /> : <ShoppingBag className="size-4" />}
             {t(`student.library.tabs.${key}`)}
             {key === 'library' && libraryCount > 0 && (
               <span className={`rounded-full px-1.5 text-xs tabular-nums ${tab === key ? 'bg-brand-ink/15' : 'bg-surface-2'}`}>{num(libraryCount)}</span>
@@ -184,14 +186,31 @@ export default function Store() {
           </button>
         ))}
       </div>
-      {tab === 'library' ? <Library /> : <StoreShelf />}
+      {tab === 'library' ? <Library /> : tab === 'ranking' ? <Ranking /> : <StoreShelf />}
+    </div>
+  )
+}
+
+function Ranking() {
+  const { t } = useI18n()
+  return (
+    <div className="grid gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="max-w-2xl text-sm text-ink-2">{t('reviews.ranking.body')}</p>
+        <PublicRankingLink />
+      </div>
+      <section className="rounded-2xl border border-line bg-surface">
+        <PublisherRankingTable />
+      </section>
+      <RankingExplainer />
     </div>
   )
 }
 
 function StoreShelf() {
   const { t, L, money, num } = useI18n()
-  const { books } = useDemo()
+  const demo = useDemo()
+  const { books } = demo
   const { level } = useCurrentStudent()
   const owned = useOwned()
   const [scope, setScope] = useState('level')
@@ -246,6 +265,7 @@ function StoreShelf() {
                     <Star className="size-3.5 fill-accent text-accent" /> {num(book.rating)}
                   </span>
                 </div>
+                <ReviewerBadge summary={bookSummary(demo, book.id)} />
                 {owned(book.id) && <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-ok"><Check className="size-3.5" /> {t('student.store.owned')}</span>}
               </Link>
             </li>
@@ -255,6 +275,17 @@ function StoreShelf() {
         <p className="py-10 text-center text-ink-2">{t('student.store.empty')}</p>
       )}
     </div>
+  )
+}
+
+// "4.5 · 3 verified reviewers" under a store card
+function ReviewerBadge({ summary }) {
+  const { t, num } = useI18n()
+  if (!summary.n) return null
+  return (
+    <span className="mt-1 flex items-center gap-1 text-xs font-semibold text-primary">
+      <BadgeCheck className="size-3.5 shrink-0" /> {t('reviews.cardBadge', { n: num(summary.n), stars: num(round1(summary.stars)) })}
+    </span>
   )
 }
 
@@ -268,6 +299,8 @@ export function BookDetail() {
   const [buying, setBuying] = useState(false)
   const [readBook, reader] = useBookReader()
   const confirmPasscode = usePasscode()
+  const demo = useDemo()
+  const [tab, setTab] = useState('details')
 
   const book = books.find((b) => b.id === id && b.status === 'live')
   if (!book) return <Navigate to="/student/store" replace />
@@ -275,6 +308,7 @@ export function BookDetail() {
   const discounted = Math.round(book.price * (1 - POINTS_DISCOUNT.percent / 100))
   const canUsePoints = points >= POINTS_DISCOUNT.points
   const pdf = bookPdf(book.id)
+  const summary = bookSummary(demo, book.id)
 
   // Before purchase only the free sample is offered; after purchase the demo still ships the same sample pages.
   // The main Read button resumes where the student left off; a page tile opens that exact page.
@@ -316,6 +350,11 @@ export function BookDetail() {
             <Star className="size-4 fill-accent text-accent" /> <span className="font-semibold">{num(book.rating)}</span>
             <span className="text-ink-2">· {t('student.store.readers', { n: num(book.readers) })}</span>
           </p>
+          {summary.n > 0 && (
+            <button type="button" onClick={() => setTab('reviews')} className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+              <BadgeCheck className="size-4" /> {t('reviews.cardBadge', { n: num(summary.n), stars: num(round1(summary.stars)) })}
+            </button>
+          )}
 
           <dl className="mt-5 grid grid-cols-3 divide-x divide-line rounded-2xl border border-line bg-surface text-center">
             <div className="flex flex-col-reverse p-3">
@@ -331,16 +370,6 @@ export function BookDetail() {
               <dd className="font-display text-xl font-semibold">PDF</dd>
             </div>
           </dl>
-
-          <p className="mt-5 leading-relaxed">{L(book.about)}</p>
-          <h3 className="mt-5 text-xs font-semibold tracking-[0.12em] text-ink-2 uppercase">{t('student.store.inside')}</h3>
-          <ul className="mt-2 grid gap-1.5">
-            {book.inside.map((item) => (
-              <li key={L(item)} className="flex gap-2 text-sm">
-                <Check className="mt-0.5 size-4 shrink-0 text-primary" /> {L(item)}
-              </li>
-            ))}
-          </ul>
 
           <div className="mt-6 flex flex-wrap items-center gap-4 rounded-2xl bg-brand p-4 text-brand-ink">
             <div className="flex-1">
@@ -370,27 +399,60 @@ export function BookDetail() {
         </div>
       </div>
 
-      <section className="mt-10">
-        <h3 className="text-xs font-semibold tracking-[0.12em] text-ink-2 uppercase">{t('student.store.sample', { n: num(pdf.pages) })}</h3>
-        {/* Drawn page tiles; each opens the sample PDF at that page */}
-        <div className="-mx-1 mt-3 flex gap-3 overflow-x-auto px-1 pb-2">
-          {Array.from({ length: pdf.pages }, (_, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => read(i + 1, owned(book.id))}
-              aria-label={t('pdf.openPage', { n: num(i + 1) })}
-              className="w-36 shrink-0 rounded-lg border border-line bg-surface p-3 text-left transition-colors hover:border-primary"
-            >
-              <div className="h-2 w-2/3 rounded-full bg-ink/20" />
-              {Array.from({ length: 9 }, (__, l) => (
-                <div key={l} className="mt-2 h-1.5 rounded-full bg-ink/10" style={{ width: `${60 + ((i * 7 + l * 13) % 40)}%` }} />
-              ))}
-              <p className="mt-3 text-right text-[10px] text-ink-2 tabular-nums">{pdf.pageLabels?.[i] ?? num(i + 1)}</p>
-            </button>
-          ))}
-        </div>
-      </section>
+      <div role="tablist" aria-label={L(book.title)} className="mt-10 flex gap-1 border-b border-line">
+        {['details', 'reviews'].map((key) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => setTab(key)}
+            className={`-mb-px inline-flex items-center gap-2 border-b-2 px-3 py-3 text-sm font-semibold transition-colors ${
+              tab === key ? 'border-accent text-ink' : 'border-transparent text-ink-2 hover:text-ink'
+            }`}
+          >
+            {key === 'reviews' ? <MessageSquareText className="size-4" /> : <BookOpen className="size-4" />}
+            {key === 'reviews' ? t('reviews.tab', { n: num(summary.n) }) : t('reviews.detailsTab')}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'reviews' ? (
+        <section className="mt-6">
+          <BookReviews bookId={book.id} />
+        </section>
+      ) : (
+        <section className="mt-6">
+          <p className="max-w-3xl leading-relaxed">{L(book.about)}</p>
+          <h3 className="mt-5 text-xs font-semibold tracking-[0.12em] text-ink-2 uppercase">{t('student.store.inside')}</h3>
+          <ul className="mt-2 grid gap-1.5">
+            {book.inside.map((item) => (
+              <li key={L(item)} className="flex gap-2 text-sm">
+                <Check className="mt-0.5 size-4 shrink-0 text-primary" /> {L(item)}
+              </li>
+            ))}
+          </ul>
+          <h3 className="mt-8 text-xs font-semibold tracking-[0.12em] text-ink-2 uppercase">{t('student.store.sample', { n: num(pdf.pages) })}</h3>
+          {/* Drawn page tiles; each opens the sample PDF at that page */}
+          <div className="-mx-1 mt-3 flex gap-3 overflow-x-auto px-1 pb-2">
+            {Array.from({ length: pdf.pages }, (_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => read(i + 1, owned(book.id))}
+                aria-label={t('pdf.openPage', { n: num(i + 1) })}
+                className="w-36 shrink-0 rounded-lg border border-line bg-surface p-3 text-left transition-colors hover:border-primary"
+              >
+                <div className="h-2 w-2/3 rounded-full bg-ink/20" />
+                {Array.from({ length: 9 }, (__, l) => (
+                  <div key={l} className="mt-2 h-1.5 rounded-full bg-ink/10" style={{ width: `${60 + ((i * 7 + l * 13) % 40)}%` }} />
+                ))}
+                <p className="mt-3 text-right text-[10px] text-ink-2 tabular-nums">{pdf.pageLabels?.[i] ?? num(i + 1)}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
       {reader}
 
       <Dialog open={buying} title={t('student.store.buyTitle', { title: L(book.title) })} onClose={() => setBuying(false)}>

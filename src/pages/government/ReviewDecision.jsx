@@ -314,7 +314,7 @@ function Decision({ item, queue }) {
   const index = queue.findIndex((i) => i.kind === item.kind && i.id === item.id)
   const prev = queue[index - 1]
   const next = queue[index + 1]
-  const link = (i) => `/government/review/${i.kind}/${i.id}`
+  const link = (i) => i.href ?? `/government/review/${i.kind}/${i.id}`
   const recipient = RECIPIENT[item.kind]
   const title = L(item.title)
 

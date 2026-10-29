@@ -1,4 +1,4 @@
-import { ArrowRight, BadgeCheck, CircleAlert, CircleCheck, Plus, TrendingDown, TrendingUp } from 'lucide-react'
+import { ArrowRight, BadgeCheck, CircleAlert, CircleCheck, Plus, ShieldAlert, TrendingDown, TrendingUp, Trophy } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 import { buttonStyles, PageIntro, Panel, Stat } from '../../components/ui'
@@ -6,6 +6,7 @@ import { MY_PUBLISHER, monthlySales } from '../../data/demo/publisher'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useDemo } from '../../store/DemoStore'
 import { BookCover, BookStatusPill, useMyBooks } from './shared'
+import { publisherRanking } from '../reviews/reviewData'
 
 // Seeded months plus every store purchase of our books. All demo purchases count towards the latest month.
 // A sale paid below list price was discounted with reward points; the gap is the points share.
@@ -30,6 +31,38 @@ function SalesTooltip({ active, payload }) {
       <p className="text-xs text-ink-2">{date(row.month, { month: 'long', year: 'numeric' })}</p>
       <p className="font-semibold tabular-nums">{money(row.cash)}</p>
     </div>
+  )
+}
+
+// Where this publisher stands in the reviewer-based ranking, and how to climb it
+function RankCard() {
+  const { t, num } = useI18n()
+  const demo = useDemo()
+  const ranking = publisherRanking(demo)
+  const mine = ranking.find((r) => r.id === MY_PUBLISHER.id)
+  if (!mine) return null
+  const ahead = ranking[mine.rank - 2]
+  return (
+    <section className="mt-4 flex flex-wrap items-center gap-4 rounded-2xl border border-line bg-surface p-5">
+      <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-accent text-accent-ink">
+        <Trophy className="size-7" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-semibold tracking-[0.12em] text-ink-2 uppercase">{t('reviews.ranking.title')}</p>
+        <p className="font-display text-2xl font-semibold">{t('reviews.pub.rank', { rank: num(mine.rank), total: num(ranking.length) })}</p>
+        <p className="text-sm text-ink-2">
+          {ahead ? t('reviews.pub.gap', { name: ahead.name, gap: num(Math.round((ahead.score - mine.score) * 100) / 100) }) : t('reviews.pub.top')}
+        </p>
+        {mine.warning && (
+          <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-bad">
+            <ShieldAlert className="size-4" /> {t('reviews.pub.warning')}
+          </p>
+        )}
+      </div>
+      <Link to="/publisher/reviewers" className={buttonStyles.primary}>
+        {t('reviews.pub.improve')} <ArrowRight className="size-4" />
+      </Link>
+    </section>
   )
 }
 
@@ -156,6 +189,8 @@ export default function PublisherOverview() {
           <p className="mt-2 text-xs text-ink-2">{t('publisher.overview.pointsNote')}</p>
         </div>
       </div>
+
+      <RankCard />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <Panel

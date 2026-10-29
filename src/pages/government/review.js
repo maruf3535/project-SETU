@@ -1,9 +1,11 @@
-import { BookOpen, ClipboardList, FileText, Target } from 'lucide-react'
+import { BookOpen, ClipboardList, FileText, MonitorPlay, Target } from 'lucide-react'
 import { useI18n } from '../../i18n/I18nProvider'
+import { useCourses } from '../../store/CoursesStore'
 import { useDemo } from '../../store/DemoStore'
+import { coursesAwaitingReview } from '../courses/courseUtils'
 import { bookSubmittedAt, DEMO_NOW, posterTypes, PRIORITY_HOURS, REVIEWED_TODAY_BASE, teacherContent } from '../../data/demo/government'
 
-export const KIND_ICONS = { challenge: Target, book: BookOpen, note: FileText, exam: ClipboardList }
+export const KIND_ICONS = { challenge: Target, book: BookOpen, note: FileText, exam: ClipboardList, course: MonitorPlay, courseUpdate: MonitorPlay }
 
 // Date-only stamps (e.g. a challenge posted today) count from the start of office hours
 function parseStamp(stamp) {
@@ -31,6 +33,7 @@ export function useWaitLabel() {
 // Every item waiting for this desk, longest wait first
 export function useReviewQueue() {
   const { challenges, books, notes, portalState } = useDemo()
+  const { courses } = useCourses()
   const decided = portalState?.['government.content'] ?? {}
 
   const items = [
@@ -83,6 +86,17 @@ export function useReviewQueue() {
         stamp: n.createdAt,
         record: n,
       })),
+    // New video courses and edits of live courses; they open on the Courses review page
+    ...coursesAwaitingReview(courses).map((c) => ({
+      kind: c.kind === 'revision' ? 'courseUpdate' : 'course',
+      id: c.id,
+      title: c.title,
+      source: c.creatorRole,
+      by: c.creatorName,
+      size: { key: 'lectures', n: c.lectures },
+      stamp: c.submittedAt,
+      href: `/government/courses/${c.id}`,
+    })),
   ].map((item) => {
     const hours = hoursWaiting(item.stamp)
     return { ...item, hours, priority: hours >= PRIORITY_HOURS, tab: item.kind === 'note' ? 'notes' : 'content' }

@@ -1,10 +1,11 @@
 import { ChartColumn, ShieldCheck, Table2 } from 'lucide-react'
 import { useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { PageIntro, Stat } from '../../components/ui'
+import { PageIntro, Panel, Stat } from '../../components/ui'
 import { insightTiles, participation, turnaround, weakTopics } from '../../data/demo/government'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useDemo } from '../../store/DemoStore'
+import { PublisherRankingTable, RankingExplainer } from '../reviews/components'
 
 // Chart colours come from theme tokens, so light and dark both work
 const C = { primary: 'var(--primary)', accent: 'var(--accent)', grid: 'var(--line)', axis: 'var(--ink-2)', ink: 'var(--ink)', surface: 'var(--surface)' }
@@ -375,6 +376,13 @@ export default function Insights() {
         <Participation />
         <Turnaround />
       </div>
+
+      <Panel title={t('reviews.ranking.title')} className="mt-6">
+        <PublisherRankingTable />
+        <div className="border-t border-line p-4">
+          <RankingExplainer />
+        </div>
+      </Panel>
 
       <p className="mt-6 text-xs text-ink-2">{t('government.insights.footnote')}</p>
     </div>

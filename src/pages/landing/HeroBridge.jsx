@@ -37,7 +37,6 @@ export default function HeroBridge() {
             strokeWidth="3"
             strokeLinecap="round"
             vectorEffect="non-scaling-stroke"
-            pathLength="1"
             className="setu-arch"
           />
         </svg>

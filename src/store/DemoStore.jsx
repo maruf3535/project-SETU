@@ -3,13 +3,14 @@ import { books } from '../data/demo/books'
 import { challenges } from '../data/demo/challenges'
 import { notes } from '../data/demo/notes'
 import { projects } from '../data/demo/projects'
+import { bookReviews, reviewCalls, reviewCopies, reviewerCases } from '../data/demo/reviews'
 import { studentLevels } from '../data/demo/studentLevels'
 import { students } from '../data/demo/talent'
 
 // One shared, browser-only store so an action in one portal shows up in the others
 // (industry posts → government approves → student applies → industry pays).
 // Bump the version whenever the seed data changes, so browsers drop their old copy
-const STORAGE_KEY = 'setu.demo.v5'
+const STORAGE_KEY = 'setu.demo.v6'
 
 function seed() {
   return structuredClone({
@@ -39,6 +40,11 @@ function seed() {
     ],
     // Last page read per `${studentId}:${bookId}`: { page, pages, at }
     reading: {},
+    // Book reviewers: open calls, copies sent to reviewers, published reviews, government cases on reviewers
+    reviewCalls,
+    reviewCopies,
+    bookReviews,
+    reviewerCases,
   })
 }
 
@@ -187,6 +193,79 @@ function reducer(state, action) {
             : s,
         ),
       }
+    // Book reviewers
+    case 'openReviewCall':
+      return { ...state, reviewCalls: [action.call, ...state.reviewCalls.filter((c) => c.bookId !== action.call.bookId)] }
+    case 'closeReviewCall':
+      return { ...state, reviewCalls: state.reviewCalls.filter((c) => c.bookId !== action.bookId) }
+    case 'addReviewCopy':
+      return { ...state, reviewCopies: [action.copy, ...state.reviewCopies] }
+    // invited → reading (reviewer accepts), requested → reading (publisher sends the copy), or → declined.
+    // A student reviewer keeps the book in My library for free.
+    case 'setReviewCopy': {
+      const copy = state.reviewCopies.find((c) => c.id === action.id)
+      const book = state.books.find((b) => b.id === copy.bookId)
+      const gift =
+        action.status === 'reading' && copy.reviewerId.startsWith('st-') && !state.freeCopies.some((f) => f.studentId === copy.reviewerId && f.bookId === copy.bookId)
+      return {
+        ...state,
+        reviewCopies: state.reviewCopies.map((c) => (c.id === action.id ? { ...c, status: action.status, at: new Date().toISOString() } : c)),
+        freeCopies: gift
+          ? [...state.freeCopies, { studentId: copy.reviewerId, bookId: copy.bookId, from: { en: `${book.publisher} · review copy`, bn: `${book.publisher} · রিভিউ কপি` }, at: new Date().toISOString() }]
+          : state.freeCopies,
+      }
+    }
+    case 'reviewCopyRead':
+      return {
+        ...state,
+        reviewCopies: state.reviewCopies.map((c) => (c.id === action.id && !c.pagesSeen.includes(action.page) ? { ...c, pagesSeen: [...c.pagesSeen, action.page] } : c)),
+      }
+    // Publishes the review, pays the honorarium and, for students, adds portfolio evidence
+    case 'submitBookReview': {
+      const copy = state.reviewCopies.find((c) => c.id === action.copyId)
+      const book = state.books.find((b) => b.id === copy.bookId)
+      return {
+        ...state,
+        bookReviews: [action.review, ...state.bookReviews],
+        reviewCopies: state.reviewCopies.map((c) => (c.id === copy.id ? { ...c, status: 'reviewed' } : c)),
+        students: state.students.map((st) =>
+          st.id === copy.reviewerId
+            ? {
+                ...st,
+                earned: st.earned + copy.honorarium,
+                evidence: [
+                  { title: { en: `Book review: ${book.title.en}`, bn: `বই রিভিউ: ${book.title.bn}` }, kind: 'review', by: { en: `Review copy · ${book.publisher}`, bn: `রিভিউ কপি · ${book.publisher}` } },
+                  ...st.evidence,
+                ],
+              }
+            : st,
+        ),
+      }
+    }
+    case 'replyReview':
+      return { ...state, bookReviews: state.bookReviews.map((r) => (r.id === action.id ? { ...r, reply: { text: action.text, at: new Date().toISOString() } } : r)) }
+    case 'reportReview':
+      return { ...state, bookReviews: state.bookReviews.map((r) => (r.id === action.id ? { ...r, status: 'reported', report: { reason: action.reason, at: new Date().toISOString() } } : r)) }
+    // Government decision on a reported review: keep it public or remove it
+    case 'decideReview':
+      return {
+        ...state,
+        bookReviews: state.bookReviews.map((r) => (r.id === action.id ? { ...r, status: action.keep ? 'public' : 'removed', report: r.report && { ...r.report, decision: action.keep ? 'kept' : 'removed' } } : r)),
+      }
+    // Government case on a reviewer. suspended → (reviewer clarifies) clarified → cleared | upheld.
+    // Upheld removes the reviewer's reviews and keeps them suspended.
+    case 'reviewerCase': {
+      const prev = state.reviewerCases[action.reviewerId] ?? {}
+      const next = { ...prev, ...action.changes, history: [...(prev.history ?? []), { status: action.changes.status, at: new Date().toISOString() }] }
+      return {
+        ...state,
+        reviewerCases: { ...state.reviewerCases, [action.reviewerId]: next },
+        bookReviews:
+          action.changes.status === 'upheld'
+            ? state.bookReviews.map((r) => (r.reviewerId === action.reviewerId ? { ...r, status: 'removed' } : r))
+            : state.bookReviews,
+      }
+    }
     case 'reset':
       return seed()
     default:

@@ -1,4 +1,4 @@
-import { Award, BadgeCheck, FlaskConical, FolderGit2, MapPin, Search, Send, Star, Target } from 'lucide-react'
+import { Award, BadgeCheck, BookCheck, FlaskConical, FolderGit2, MapPin, Search, Send, Star, Target } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Avatar from '../../components/Avatar'
@@ -11,7 +11,7 @@ import { useOwnChallenges } from './shared'
 import PublicProfileLink from '../../components/PublicProfileLink'
 
 const DIVISIONS = ['dhaka', 'chattogram', 'rajshahi', 'khulna', 'barishal', 'sylhet', 'rangpur', 'mymensingh']
-const evidenceIcons = { project: FolderGit2, award: Award, challenge: Target, research: FlaskConical }
+const evidenceIcons = { project: FolderGit2, award: Award, challenge: Target, research: FlaskConical, review: BookCheck }
 
 export default function Talent() {
   const { t, L, money, num } = useI18n()

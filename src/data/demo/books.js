@@ -77,6 +77,39 @@ export const books = [
       { en: 'Past-semester style questions', bn: 'আগের সেমিস্টারের ধাঁচে প্রশ্ন' },
     ],
   },
+  {
+    id: 'bk-bio-nobodoy', publisherId: 'nobodoy', publisher: 'Nobodoy Prokashoni', level: 'school',
+    title: { en: 'Biology Quick Revision', bn: 'জীববিজ্ঞান দ্রুত রিভিশন' },
+    cls: { en: 'Class 9–10', bn: '৯ম–১০ম শ্রেণি' }, subject: 'biology',
+    price: 95, pages: 240, syllabus: 2026, rating: 4.4, readers: 610, sold: 0, status: 'live', cover: 'mist',
+    about: { en: 'Chapter summaries, labelled diagrams and 300 board-style MCQs.', bn: 'অধ্যায়ের সারসংক্ষেপ, লেবেলযুক্ত চিত্র ও ৩০০ বোর্ড-প্যাটার্ন এমসিকিউ।' },
+    inside: [
+      { en: '14 chapter summaries', bn: '১৪টি অধ্যায়ের সারসংক্ষেপ' },
+      { en: '300 board-style MCQs', bn: '৩০০ বোর্ড-প্যাটার্ন এমসিকিউ' },
+    ],
+  },
+  {
+    id: 'bk-bangla-grammar', publisherId: 'gyankosh', publisher: 'Gyankosh Prokash', level: 'school',
+    title: { en: 'Bangla Grammar & Composition', bn: 'বাংলা ব্যাকরণ ও নির্মিতি' },
+    cls: { en: 'Class 9–10', bn: '৯ম–১০ম শ্রেণি' }, subject: 'bangla',
+    price: 100, pages: 320, syllabus: 2026, rating: 4.7, readers: 940, sold: 0, status: 'live', cover: 'amber',
+    about: { en: 'Grammar rules with new examples, letters, essays and the 2026 board question pattern.', bn: 'নতুন উদাহরণসহ ব্যাকরণের নিয়ম, পত্র, রচনা ও ২০২৬ বোর্ড প্রশ্ন-প্যাটার্ন।' },
+    inside: [
+      { en: 'Full grammar syllabus', bn: 'পূর্ণ ব্যাকরণ সিলেবাস' },
+      { en: '60 model essays and letters', bn: '৬০টি নমুনা রচনা ও পত্র' },
+    ],
+  },
+  {
+    id: 'bk-ict-hsc', publisherId: 'shikkhalok', publisher: 'Shikkhalok Publishers', level: 'college',
+    title: { en: 'HSC ICT Complete', bn: 'এইচএসসি আইসিটি সম্পূর্ণ' },
+    cls: { en: 'Class 11–12', bn: 'একাদশ–দ্বাদশ শ্রেণি' }, subject: 'ict',
+    price: 150, pages: 360, syllabus: 2026, rating: 4.3, readers: 1300, sold: 0, status: 'live', cover: 'teal',
+    about: { en: 'All six chapters with C and HTML practice, plus solved board questions.', bn: 'সি ও এইচটিএমএল অনুশীলনসহ ছয়টি অধ্যায় এবং সমাধানকৃত বোর্ড প্রশ্ন।' },
+    inside: [
+      { en: '6 chapters', bn: '৬টি অধ্যায়' },
+      { en: 'C and HTML practice sets', bn: 'সি ও এইচটিএমএল অনুশীলনী' },
+    ],
+  },
 ]
 
 export const SAMPLE_PAGES = 12

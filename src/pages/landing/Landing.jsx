@@ -84,6 +84,12 @@ function Header() {
               {t(`landing.nav.${key}`)}
             </button>
           ))}
+          <Link
+            to="/rankings"
+            className="rounded-full px-3 py-1.5 text-sm text-brand-ink/75 transition-colors hover:bg-brand-ink/10 hover:text-brand-ink"
+          >
+            {t('reviews.ranking.navLink')}
+          </Link>
         </nav>
         <LanguageToggle />
         <span className="hidden sm:block">
@@ -456,6 +462,9 @@ function Closing() {
             <span className="font-display text-lg font-semibold text-ink">{t('brand.name')}</span>
           </div>
           <p className="flex-1 sm:px-6">{t('landing.footer.demo')}</p>
+          <Link to="/rankings" className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline">
+            {t('reviews.ranking.navLink')}
+          </Link>
           <a href={REPO_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline">
             {t('landing.footer.code')} <ExternalLink className="size-4" />
           </a>

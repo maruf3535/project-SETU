@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { portals, ROLES } from '../data/portals'
 import { useI18n } from '../i18n/I18nProvider'
+import { useCourses } from '../store/CoursesStore'
 import { useDemo } from '../store/DemoStore'
 import { useToast } from './Toast'
 import { useDismiss } from './useDismiss'
@@ -13,6 +14,7 @@ export default function RoleSwitcher({ current }) {
   const dismissRef = useDismiss(open, () => setOpen(false))
   const { t } = useI18n()
   const { dispatch } = useDemo()
+  const courses = useCourses()
   const toast = useToast()
   const CurrentIcon = portals[current].icon
 
@@ -66,6 +68,7 @@ export default function RoleSwitcher({ current }) {
               role="menuitem"
               onClick={() => {
                 dispatch({ type: 'reset' })
+                courses.dispatch({ type: 'reset' })
                 toast(t('common.resetDone'))
                 setOpen(false)
               }}

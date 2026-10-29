@@ -1,15 +1,20 @@
-import { Banknote, Bell, BookOpen, CircleCheck, Clock3, Inbox, Mail, PenLine, ScanLine, Undo2, Users } from 'lucide-react'
+import { Banknote, Bell, BookOpen, CircleCheck, Clock3, Inbox, Mail, MonitorPlay, PenLine, ScanLine, Undo2, Users } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { studentLevels } from '../data/demo/studentLevels'
 import { useI18n } from '../i18n/I18nProvider'
+import { useCourses } from '../store/CoursesStore'
 import { useDemo } from '../store/DemoStore'
+import { useRecommendations } from '../pages/courses/courseUtils'
 import { useDismiss } from './useDismiss'
 
 // Builds the signed-in role's notifications from the shared demo data, newest decisions first
 function useNotifications(role) {
   const { t, L, money, num } = useI18n()
   const { challenges, projects, notes, books, studentById, studentLevel } = useDemo()
+  const { courses } = useCourses()
+  // Courses the current demo student's teacher recommended to their section
+  const recommended = useRecommendations({ role: 'student', id: studentLevels[studentLevel].studentId })
   const items = []
 
   if (role === 'industry') {
@@ -51,6 +56,17 @@ function useNotifications(role) {
         text: t(n.status === 'reviewed' ? 'notify.noteLive' : 'notify.noteReview', { title: L(n.title) }),
       }),
     )
+    courses
+      .filter((c) => c.status === 'live' && recommended[c.id])
+      .forEach((c) =>
+        items.push({
+          id: `rec-${c.id}`,
+          icon: MonitorPlay,
+          tone: 'primary',
+          to: `/student/courses/${c.id}`,
+          text: t('notify.courseRecommended', { teacher: recommended[c.id].teacherName, title: L(c.title) }),
+        }),
+      )
   }
 
   if (role === 'government') {

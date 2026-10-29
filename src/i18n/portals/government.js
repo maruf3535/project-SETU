@@ -3,7 +3,7 @@ export default {
   en: {
     priority: 'Priority',
     wait: { now: 'Just now', hours: '{n} h', days: '{n} days', day: '1 day' },
-    kinds: { challenge: 'Challenge', book: 'Guide book', note: 'Note', exam: 'Exam set' },
+    kinds: { challenge: 'Challenge', book: 'Guide book', note: 'Note', exam: 'Exam set', course: 'Video course', courseUpdate: 'Course update' },
     sources: {
       industry: 'Industry',
       public: 'Public office',
@@ -11,8 +11,9 @@ export default {
       publisher: 'Publisher',
       teacher: 'Teacher',
       studentNote: 'Student note',
+      student: 'Student',
     },
-    sizes: { deliverables: '{n} deliverables', pages: '{n} pages', questions: '{n} questions' },
+    sizes: { deliverables: '{n} deliverables', pages: '{n} pages', questions: '{n} questions', lectures: '{n} lectures' },
 
     queue: {
       title: 'Today’s review queue',
@@ -199,7 +200,7 @@ export default {
   bn: {
     priority: 'অগ্রাধিকার',
     wait: { now: 'এইমাত্র', hours: '{n} ঘণ্টা', days: '{n} দিন', day: '১ দিন' },
-    kinds: { challenge: 'চ্যালেঞ্জ', book: 'গাইড বই', note: 'নোট', exam: 'প্রশ্নসেট' },
+    kinds: { challenge: 'চ্যালেঞ্জ', book: 'গাইড বই', note: 'নোট', exam: 'প্রশ্নসেট', course: 'ভিডিও কোর্স', courseUpdate: 'কোর্স হালনাগাদ' },
     sources: {
       industry: 'ইন্ডাস্ট্রি',
       public: 'সরকারি দপ্তর',
@@ -207,8 +208,9 @@ export default {
       publisher: 'প্রকাশক',
       teacher: 'শিক্ষক',
       studentNote: 'শিক্ষার্থীর নোট',
+      student: 'শিক্ষার্থী',
     },
-    sizes: { deliverables: '{n}টি ডেলিভারেবল', pages: '{n} পৃষ্ঠা', questions: '{n}টি প্রশ্ন' },
+    sizes: { deliverables: '{n}টি ডেলিভারেবল', pages: '{n} পৃষ্ঠা', questions: '{n}টি প্রশ্ন', lectures: '{n}টি লেকচার' },
 
     queue: {
       title: 'আজকের রিভিউ তালিকা',

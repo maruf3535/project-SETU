@@ -16,7 +16,7 @@ export function QueueRow({ item }) {
 
   return (
     <Link
-      to={`/government/review/${item.kind}/${item.id}`}
+      to={item.href ?? `/government/review/${item.kind}/${item.id}`}
       className="group flex items-start gap-4 px-5 py-4 transition-colors hover:bg-surface-2/60 sm:items-center"
     >
       <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-surface-2 text-primary">

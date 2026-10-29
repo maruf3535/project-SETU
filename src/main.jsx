@@ -8,6 +8,7 @@ import { ToastProvider } from './components/Toast'
 import UnderDevelopmentBanner from './components/UnderDevelopmentBanner'
 import { I18nProvider } from './i18n/I18nProvider'
 import './index.css'
+import { CoursesStoreProvider } from './store/CoursesStore'
 import { DemoStoreProvider } from './store/DemoStore'
 import { ThemeProvider } from './theme/ThemeProvider'
 
@@ -18,13 +19,15 @@ createRoot(document.getElementById('root')).render(
       <ThemeProvider>
         <I18nProvider>
           <DemoStoreProvider>
-            <ToastProvider>
-              <PasscodeProvider>
-                <UnderDevelopmentBanner />
-                <App />
-                <ScrollTopButton />
-              </PasscodeProvider>
-            </ToastProvider>
+            <CoursesStoreProvider>
+              <ToastProvider>
+                <PasscodeProvider>
+                  <UnderDevelopmentBanner />
+                  <App />
+                  <ScrollTopButton />
+                </PasscodeProvider>
+              </ToastProvider>
+            </CoursesStoreProvider>
           </DemoStoreProvider>
         </I18nProvider>
       </ThemeProvider>

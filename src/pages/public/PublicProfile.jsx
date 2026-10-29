@@ -1,4 +1,4 @@
-import { Award, BadgeCheck, BookOpen, Copy, FlaskConical, FolderGit2, Lock, Mail, MapPin, Phone, ShieldCheck, Star, Target } from 'lucide-react'
+import { Award, BadgeCheck, BookCheck, BookOpen, Copy, FlaskConical, FolderGit2, Lock, Mail, MapPin, Phone, ShieldCheck, Star, Target } from 'lucide-react'
 import QRCode from 'qrcode'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
@@ -12,8 +12,11 @@ import { buttonStyles, SkillChip, StatusPill } from '../../components/ui'
 import { useI18n } from '../../i18n/I18nProvider'
 import { useDemo } from '../../store/DemoStore'
 import { publicDirectory, publicUrlFor } from './publicProfiles'
+import { CreatorCoursesSection } from '../courses'
+import { LevelBadge, PublicRankingLink, ReviewCard } from '../reviews/components'
+import { caseOf, isBlocked, publisherRanking, reviewerStats, round1 } from '../reviews/reviewData'
 
-const evidenceIcons = { project: FolderGit2, award: Award, challenge: Target, research: FlaskConical }
+const evidenceIcons = { project: FolderGit2, award: Award, challenge: Target, research: FlaskConical, review: BookCheck }
 
 function QrCode({ url }) {
   const { t } = useI18n()
@@ -153,23 +156,78 @@ function TeacherDetails({ record }) {
   )
 }
 
+// SETU reviewer record: level, points and the reviews this person published on books
+function ReviewerDetails({ record }) {
+  const { t, num } = useI18n()
+  const demo = useDemo()
+  const stats = reviewerStats(demo, record.id)
+  const blocked = isBlocked(demo, record.id)
+  if (!stats.total && !caseOf(demo, record.id)) return null
+  return (
+    <Section title={t('reviews.profile.title')}>
+      <div className="flex flex-wrap items-center gap-3">
+        <LevelBadge level={stats.level} />
+        <span className="text-sm text-ink-2">{t('reviews.profile.meta', { n: num(stats.total), points: num(stats.points) })}</span>
+        {blocked && <span className="rounded-full bg-bad-soft px-2.5 py-1 text-xs font-semibold text-bad">{t('reviews.profile.suspended')}</span>}
+      </div>
+      {stats.reviews.length > 0 && (
+        <div className="mt-4 grid gap-3">
+          {stats.reviews.map((review) => (
+            <ReviewCard key={review.id} review={review} showBook />
+          ))}
+        </div>
+      )}
+    </Section>
+  )
+}
+
+// Publisher's place in the reviewer-based ranking
+function PublisherRank({ id }) {
+  const { t, num } = useI18n()
+  const demo = useDemo()
+  const ranking = publisherRanking(demo)
+  const row = ranking.find((r) => r.id === id)
+  if (!row) return null
+  return (
+    <dl className="grid grid-cols-3 gap-3">
+      {[
+        [t('reviews.profile.rank'), `#${num(row.rank)} / ${num(ranking.length)}`],
+        [t('reviews.profile.reviewerScore'), row.n ? `★ ${num(round1(row.average))}` : '–'],
+        [t('reviews.profile.reviews'), num(row.n)],
+      ].map(([label, value]) => (
+        <div key={label} className="flex flex-col-reverse rounded-2xl border border-line bg-surface p-4">
+          <dt className="text-xs text-ink-2">{label}</dt>
+          <dd className="font-display text-2xl font-semibold tabular-nums">{value}</dd>
+        </div>
+      ))}
+      {row.warning && <p className="col-span-3 rounded-xl bg-bad-soft px-4 py-2 text-sm font-semibold text-bad">{t('reviews.ranking.warningLong')}</p>}
+      <div className="col-span-3">
+        <PublicRankingLink />
+      </div>
+    </dl>
+  )
+}
+
 function PublisherDetails({ record }) {
   const { t, L, money } = useI18n()
   return (
-    <Section title={t('publicProfile.liveBooks')}>
-      <ul className="grid gap-3 sm:grid-cols-2">
-        {record.publisher.books.map((b) => (
-          <li key={b.id} className="flex items-center gap-3 rounded-xl bg-surface-2/60 p-3">
-            <BookOpen className="size-5 shrink-0 text-primary" />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate font-semibold">{L(b.title)}</span>
-              <span className="block text-xs text-ink-2">{L(b.cls)}</span>
-            </span>
-            <span className="text-sm font-semibold tabular-nums">{money(b.price)}</span>
-          </li>
-        ))}
-      </ul>
-    </Section>
+    <>
+      <PublisherRank id={record.id} />
+      <Section title={t('publicProfile.liveBooks')}>
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {record.publisher.books.map((b) => (
+            <li key={b.id} className="flex items-center gap-3 rounded-xl bg-surface-2/60 p-3">
+              <BookOpen className="size-5 shrink-0 text-primary" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-semibold">{L(b.title)}</span>
+                <span className="block text-xs text-ink-2">{L(b.cls)}</span>
+              </span>
+              <span className="text-sm font-semibold tabular-nums">{money(b.price)}</span>
+            </li>
+          ))}
+        </ul>
+      </Section>
+    </>
   )
 }
 
@@ -315,6 +373,8 @@ export default function PublicProfile() {
               {record.role === 'student' && <StudentDetails record={record} />}
               {record.role === 'teacher' && <TeacherDetails record={record} />}
               {record.role === 'publisher' && <PublisherDetails record={record} />}
+              {(record.role === 'student' || record.role === 'teacher') && <ReviewerDetails record={record} />}
+              {['student', 'teacher', 'industry'].includes(record.role) && <CreatorCoursesSection creatorId={record.id} />}
               {record.role === 'industry' && <IndustryDetails record={record} />}
               {record.role === 'government' && <GovernmentDetails record={record} />}
 

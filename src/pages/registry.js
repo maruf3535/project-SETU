@@ -5,6 +5,7 @@ import IndustryOverview from './industry/Overview'
 import PostChallenge from './industry/PostChallenge'
 import Projects from './industry/Projects'
 import Talent from './industry/Talent'
+import { CourseDetail, CoursePlayer, CreateCourse, IndustryCourses } from './courses'
 import * as publisher from './publisher/index.jsx'
 import * as student from './student/index.jsx'
 import * as teacher from './teacher/index.jsx'
@@ -18,6 +19,7 @@ export const pages = {
   'industry:postChallenge': PostChallenge,
   'industry:talent': Talent,
   'industry:projects': Projects,
+  'industry:courses': IndustryCourses,
   ...Object.fromEntries(
     Object.entries(portalModules).flatMap(([role, mod]) => Object.entries(mod.pages).map(([key, page]) => [`${role}:${key}`, page])),
   ),
@@ -30,6 +32,12 @@ export const sidebarUsers = Object.fromEntries(Object.entries(portalModules).map
 
 // Pages reached from inside a portal but not shown in its navigation
 export const extraRoutes = {
-  industry: [{ path: 'challenges/:id', element: ChallengeDetail }],
+  industry: [
+    { path: 'challenges/:id', element: ChallengeDetail },
+    { path: 'courses/new', element: CreateCourse },
+    { path: 'courses/:id', element: CourseDetail },
+    { path: 'courses/:id/edit', element: CreateCourse },
+    { path: 'courses/:id/watch', element: CoursePlayer },
+  ],
   ...Object.fromEntries(Object.entries(portalModules).map(([role, mod]) => [role, mod.extraRoutes])),
 }

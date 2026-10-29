@@ -7,6 +7,8 @@ import Omr from './Omr'
 import Research from './Research'
 import { teacherLevelOf } from './useTeacher'
 import Written from './Written'
+import { TeacherReviewerDesk } from '../reviews/ReviewerDesk'
+import { CourseDetail, CoursePlayer, CreateCourse, TeacherCourses } from '../courses'
 import WrittenDetail from './WrittenDetail'
 
 // Built pages of the teacher portal, keyed by nav key from src/data/portals.js
@@ -16,11 +18,19 @@ export const pages = {
   omr: Omr,
   written: Written,
   classNotes: ClassNotes,
+  reviewCopies: TeacherReviewerDesk,
+  courses: TeacherCourses,
   research: Research,
 }
 
 // Pages reached from inside the portal but not listed in its navigation
-export const extraRoutes = [{ path: 'written/:id', element: WrittenDetail }]
+export const extraRoutes = [
+  { path: 'written/:id', element: WrittenDetail },
+  { path: 'courses/new', element: CreateCourse },
+  { path: 'courses/:id', element: CourseDetail },
+  { path: 'courses/:id/edit', element: CreateCourse },
+  { path: 'courses/:id/watch', element: CoursePlayer },
+]
 
 export function SidebarExtra() {
   return <LevelSwitcher tone="dark" />

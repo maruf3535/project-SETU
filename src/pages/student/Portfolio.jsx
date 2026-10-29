@@ -1,4 +1,4 @@
-import { Award, BadgeCheck, FlaskConical, FolderGit2, Plus, Share2, ShieldCheck, Star, Target } from 'lucide-react'
+import { Award, BadgeCheck, BookCheck, FlaskConical, FolderGit2, Plus, Share2, ShieldCheck, Star, Target } from 'lucide-react'
 import { useState } from 'react'
 import Avatar from '../../components/Avatar'
 import { useToast } from '../../components/Toast'
@@ -8,7 +8,7 @@ import { useI18n } from '../../i18n/I18nProvider'
 import { useCurrentStudent, useDemo } from '../../store/DemoStore'
 import { slugify } from '../public/publicProfiles'
 
-const evidenceIcons = { project: FolderGit2, award: Award, challenge: Target, research: FlaskConical }
+const evidenceIcons = { project: FolderGit2, award: Award, challenge: Target, research: FlaskConical, review: BookCheck }
 const levelWidth = { beginner: '35%', intermediate: '65%', advanced: '90%' }
 
 export default function Portfolio() {

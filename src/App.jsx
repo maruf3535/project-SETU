@@ -10,6 +10,7 @@ import Welcome from './pages/onboarding/Welcome'
 import PortalPlaceholder from './pages/PortalPlaceholder'
 import Profile from './pages/profile/Profile'
 import PublicProfile from './pages/public/PublicProfile'
+import Rankings from './pages/public/Rankings'
 import { extraRoutes, pages } from './pages/registry'
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/welcome" element={<Welcome />} />
       <Route path="/u/:slug" element={<PublicProfile />} />
+      <Route path="/rankings" element={<Rankings />} />
       <Route path="/signin" element={<SignIn />} />
       <Route path="/onboarding" element={<RoleSelect />} />
       <Route path="/onboarding/:role/details" element={<Details />} />
